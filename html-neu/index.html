@@ -1,0 +1,259 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no">
+	<title>Eitech Robby</title>
+<style>
+
+body {
+	background-color: whitesmoke; 
+}
+
+/* Do not show anything in portrait mode */
+
+/* kleine Tablets, grosse Smartphones */
+
+@media (max-device-width: 1024px) and (orientation: landscape) {
+
+	#stop {
+		background-color: red;
+		position: fixed;
+		bottom: 84px;
+		right: -84px;
+		height: 84px;
+		width: 252px;
+		z-index: 50;
+		transform: rotate(270deg);
+	}
+	#stop .rotatetext {
+		font-size: 70px;
+		color: white;
+		font-family: sans-serif;
+		font-weight: bold; 
+		padding-left: 30px; 
+	}
+	
+	#redsquare {
+		background-color: red;
+		position: fixed;
+		top: 0;
+		left: 0;
+		height: 80px;
+		width: 80px;
+		z-index: 10;
+		display: none; 
+	}
+	#bluesquare {
+		background-color: blue;
+		position: fixed;
+		top: 0;
+		right: 0;
+		height: 80px;
+		width: 80px;
+		z-index: 12; 
+		display: none;
+	}
+	#bgcontainer {
+		background-color: whitesmoke;
+		position: fixed;
+		bottom: 0;
+		right: 84px;
+		height: 252px;
+		width: 252px;
+		z-index: 5;
+		padding: 0;
+		margin: 0;
+	}
+	#fgcontainer {
+		position: fixed;
+		bottom: 84px;
+		right: 168px;
+		height: 84px;
+		width: 84px;
+		z-index: 20; 
+		padding: 0;
+		margin: 0;
+	}
+	#slider1bg {
+		position: fixed;
+		bottom: 10px;
+		left: 116px;
+		height: 232px;
+		width: 20px;
+		z-index: 12; 
+		background-color: lightgray;
+		border-width: 1px;
+		border-style: solid;
+		border-color: gray;
+	}
+	#slider2bg {
+		position: fixed;
+		bottom: 10px;
+		left: 200px;
+		height: 232px;
+		width: 20px;
+		z-index: 12; 
+		background-color: lightgray;
+		border-width: 1px;
+		border-style: solid;
+		border-color: gray;
+	}
+	#slider1 {
+		position: fixed;
+		bottom: 116px;
+		left: 84px;
+		height: 20px;
+		width: 84px;
+		z-index: 15; 
+		background-color: darkgray;
+		border-width: 1px;
+		border-style: solid;
+		border-color: black;
+	}
+	#slider2 {
+		position: fixed;
+		bottom: 116px;
+		left: 168px;
+		height: 20px;
+		width: 84px;
+		z-index: 15; 
+		background-color: darkgray;
+		border-width: 1px;
+		border-style: solid;
+		border-color: black;
+	}
+}
+
+</style>
+<script>
+function wireTouch() {
+	var obj = document.getElementById("redsquare");
+	obj.addEventListener('touchmove', function(event) {
+		// If there's exactly one finger inside this element
+		if (event.targetTouches.length == 1) {
+			var touch = event.targetTouches[0];
+			// Place element where the finger is
+			obj.style.left = (touch.pageX - 40) + 'px';
+			obj.style.top = (touch.pageY - 40) + 'px';
+		}
+	}, false);
+	var obk = document.getElementById("bluesquare");
+	obk.addEventListener('touchmove', function(event) {
+		// If there's exactly one finger inside this element
+		if (event.targetTouches.length == 1) {
+			var touch = event.targetTouches[0];
+			// Place element where the finger is
+			obk.style.left = (touch.pageX - 40) + 'px';
+			obk.style.top = (touch.pageY - 40) + 'px';
+		}
+	}, false);
+	var obh = document.getElementById("fgcontainer");
+	obh.addEventListener('touchmove', function(event) {
+		// If there's exactly one finger inside this element
+		if (event.targetTouches.length == 1) {
+			var touch = event.targetTouches[0];
+			if (checkInside(touch.pageX, touch.pageY)) {
+				// Place element where the finger is
+				obh.style.left = (touch.pageX - 42) + 'px';
+				obh.style.top = (touch.pageY - 42) + 'px';
+			}
+		}
+	}, false);
+	var obm = document.getElementById("slider1");
+	obm.addEventListener('touchmove', function(event) {
+		// If there's exactly one finger inside this element
+		if (event.targetTouches.length == 1) {
+			var touch = event.targetTouches[0];
+			if (checkY(touch.pageY)) {
+				// Place element where the finger is
+				// obm.style.left = (touch.pageX - 42) + 'px';
+				obm.style.top = (touch.pageY - 10) + 'px';
+			}
+		}
+	}, false);
+	var obn = document.getElementById("slider2");
+	obn.addEventListener('touchmove', function(event) {
+		// If there's exactly one finger inside this element
+		if (event.targetTouches.length == 1) {
+			var touch = event.targetTouches[0];
+			if (checkY(touch.pageY)) {
+				// Place element where the finger is
+				// obn.style.left = (touch.pageX - 42) + 'px';
+				obn.style.top = (touch.pageY - 10) + 'px';
+			}
+		}
+	}, false);
+	drawBg();
+	drawJoystick();
+	// alert("Width: " + window.innerWidth + ", Height: " + window.innerHeight); 
+}
+
+function checkInside(x, y) {
+	var box = document.getElementById('bgcontainer').getBoundingClientRect();
+	var boxcx = ( box.right + box.left) / 2;
+	var boxcy = ( box.top + box.bottom) / 2;
+	var rad = Math.sqrt( Math.pow( x - boxcx, 2) + Math.pow( y - boxcy, 2));
+	console.log("X: " + x + ", Y: " + y + ", Radius: " + rad); 
+	// console.log(box.top, box.right, box.bottom, box.left);
+	if (rad > 90) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+function checkY(y) {
+	var box = document.getElementById('slider1bg').getBoundingClientRect();
+	console.log(y);
+	if (y > box.bottom || y < box.top) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+function drawBg() {
+	var canvas = document.getElementById('joybg');
+	var context = canvas.getContext('2d');
+	var centerX = canvas.width / 2;
+	var centerY = canvas.height / 2;
+	var radius = 125;
+
+	context.beginPath();
+	context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+	context.fillStyle = 'lightgray';
+	context.fill();
+	context.lineWidth = 2;
+	context.strokeStyle = 'gray';
+	context.stroke();
+}
+
+function drawJoystick() {
+	var canvas = document.getElementById('joycanv');
+	var context = canvas.getContext('2d');
+	var centerX = canvas.width / 2;
+	var centerY = canvas.height / 2;
+	var radius = 41;
+
+	context.beginPath();
+	context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+	context.fillStyle = 'darkgray';
+	context.fill();
+	context.lineWidth = 1;
+	context.strokeStyle = 'black';
+	context.stroke();
+}
+</script>
+</head>
+<body onload="wireTouch();">
+	<div id="redsquare"></div>
+	<div id="bluesquare"></div>
+	<div id="stop"><div class="rotatetext">STOP</div></div>
+	<div id="fgcontainer"><canvas id="joycanv" width="84" height="84" /></div>
+	<div id="bgcontainer"><canvas id="joybg" width="252" height="252" /></div>
+	<div id="slider1bg"></div>
+	<div id="slider2bg"></div>
+	<div id="slider1"></div>
+	<div id="slider2"></div>
+</body>
