@@ -8,6 +8,34 @@
 
 body {
 	background-color: whitesmoke; 
+	margin: 0;
+	padding: 0; 
+}
+
+#stop, #fgcontainer, #bgcontainer, #slider1bg, #slider2bg, #slider1, #slider2, #iconsettings, #iconbattery, #iconeitech, #settings  {
+	display: none; 
+}
+
+#rotate {
+	background-color: whitesmoke;
+	height: 100%;
+	width: 100%;
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	padding: 0px;
+	font-family: sans-serif;
+	font-weight: bold; 
+	font-size: 16px; 	
+}
+
+#rotate div {
+	margin: 0;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	text-align: center; 
 }
 
 /* Do not show anything in portrait mode */
@@ -16,8 +44,33 @@ body {
 
 @media (max-device-width: 1024px) and (orientation: landscape) {
 
+	#rotate {
+		display: none; 
+	}
+	
+	#settings {
+		background-color: whitesmoke;
+		height: 100%;
+		width: 100%;
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		padding: 0px;
+		font-family: sans-serif;
+		font-size: 16px; 
+		z-index: 100; 
+	}
+
+	#settings #close {
+		margin: 0;
+		position: absolute;
+		bottom: 30px;
+		right: 30px;
+		font-weight: bold; 
+	}
+
 	#stop {
-		background-color: red;
+		background-color: gray;
 		position: fixed;
 		bottom: 84px;
 		right: -84px;
@@ -25,6 +78,7 @@ body {
 		width: 252px;
 		z-index: 50;
 		transform: rotate(270deg);
+		display: block; 
 	}
 	#stop .rotatetext {
 		font-size: 70px;
@@ -32,27 +86,6 @@ body {
 		font-family: sans-serif;
 		font-weight: bold; 
 		padding-left: 30px; 
-	}
-	
-	#redsquare {
-		background-color: red;
-		position: fixed;
-		top: 0;
-		left: 0;
-		height: 80px;
-		width: 80px;
-		z-index: 10;
-		display: none; 
-	}
-	#bluesquare {
-		background-color: blue;
-		position: fixed;
-		top: 0;
-		right: 0;
-		height: 80px;
-		width: 80px;
-		z-index: 12; 
-		display: none;
 	}
 	#bgcontainer {
 		background-color: whitesmoke;
@@ -64,6 +97,7 @@ body {
 		z-index: 5;
 		padding: 0;
 		margin: 0;
+		display: block; 
 	}
 	#fgcontainer {
 		position: fixed;
@@ -74,11 +108,12 @@ body {
 		z-index: 20; 
 		padding: 0;
 		margin: 0;
+		display: block; 
 	}
 	#slider1bg {
 		position: fixed;
 		bottom: 10px;
-		left: 116px;
+		left: 137px;
 		height: 232px;
 		width: 20px;
 		z-index: 12; 
@@ -86,11 +121,12 @@ body {
 		border-width: 1px;
 		border-style: solid;
 		border-color: gray;
+		display: block; 
 	}
 	#slider2bg {
 		position: fixed;
 		bottom: 10px;
-		left: 200px;
+		left: 242px;
 		height: 232px;
 		width: 20px;
 		z-index: 12; 
@@ -98,11 +134,12 @@ body {
 		border-width: 1px;
 		border-style: solid;
 		border-color: gray;
+		display: block; 
 	}
 	#slider1 {
 		position: fixed;
 		bottom: 116px;
-		left: 84px;
+		left: 105px;
 		height: 20px;
 		width: 84px;
 		z-index: 15; 
@@ -110,11 +147,12 @@ body {
 		border-width: 1px;
 		border-style: solid;
 		border-color: black;
+		display: block; 
 	}
 	#slider2 {
 		position: fixed;
 		bottom: 116px;
-		left: 168px;
+		left: 210px;
 		height: 20px;
 		width: 84px;
 		z-index: 15; 
@@ -122,32 +160,55 @@ body {
 		border-width: 1px;
 		border-style: solid;
 		border-color: black;
+		display: block; 
 	}
+	#slider1, #slider2 {
+		text-align: center;
+		font-size: 16px;
+		padding-top: 3px;
+		font-family: sans-serif;
+		font-weight: bold; 
+		display: block; 
+	}
+	
+	#iconsettings {
+		position: fixed;
+		bottom: -36px;
+		left: 32px;
+		z-index: 12; 
+		display: block; 
+		width: 84px;
+		height: 84px;
+	}
+	
+	#iconbattery {
+		position: fixed;
+		bottom: 48px;
+		left: 32px;
+		z-index: 12; 
+		display: block; 
+		width: 84px;
+		height: 84px;
+	}
+	
+	#iconeitech {
+		position: fixed;
+		bottom: 170px;
+		left: 0px;
+		z-index: 12; 
+		display: block; 
+		width: 84px;
+	}
+	
+	#iconsettings svg, #iconbattery svg {
+		transform: scale(5.2); 
+	}
+	
 }
 
 </style>
 <script>
 function wireTouch() {
-	var obj = document.getElementById("redsquare");
-	obj.addEventListener('touchmove', function(event) {
-		// If there's exactly one finger inside this element
-		if (event.targetTouches.length == 1) {
-			var touch = event.targetTouches[0];
-			// Place element where the finger is
-			obj.style.left = (touch.pageX - 40) + 'px';
-			obj.style.top = (touch.pageY - 40) + 'px';
-		}
-	}, false);
-	var obk = document.getElementById("bluesquare");
-	obk.addEventListener('touchmove', function(event) {
-		// If there's exactly one finger inside this element
-		if (event.targetTouches.length == 1) {
-			var touch = event.targetTouches[0];
-			// Place element where the finger is
-			obk.style.left = (touch.pageX - 40) + 'px';
-			obk.style.top = (touch.pageY - 40) + 'px';
-		}
-	}, false);
 	var obh = document.getElementById("fgcontainer");
 	obh.addEventListener('touchmove', function(event) {
 		// If there's exactly one finger inside this element
@@ -184,6 +245,26 @@ function wireTouch() {
 			}
 		}
 	}, false);
+	var stop = document.getElementById('stop'); 
+	stop.addEventListener("click", function(event) {
+		stop.style.backgroundColor = "gray";
+		var box = document.getElementById('bgcontainer').getBoundingClientRect();
+		var boxcx = ( box.right + box.left) / 2;
+		var boxcy = ( box.top + box.bottom) / 2;
+		var obh = document.getElementById("fgcontainer");
+		obh.style.left = (boxcx - 42) + 'px';
+		obh.style.top = (boxcy - 42) + 'px';
+	}, false); 
+	var iconsettings = document.getElementById('iconsettings');
+	iconsettings.addEventListener("click", function(event) {
+		var settings = document.getElementById('settings');
+		settings.style.display = "block";
+	}, false); 
+	var close = document.getElementById('close');
+	close.addEventListener("click", function(event) {
+		var settings = document.getElementById('settings');
+		settings.style.display = "none";
+	}, false); 
 	drawBg();
 	drawJoystick();
 	// alert("Width: " + window.innerWidth + ", Height: " + window.innerHeight); 
@@ -196,6 +277,7 @@ function checkInside(x, y) {
 	var rad = Math.sqrt( Math.pow( x - boxcx, 2) + Math.pow( y - boxcy, 2));
 	console.log("X: " + x + ", Y: " + y + ", Radius: " + rad); 
 	// console.log(box.top, box.right, box.bottom, box.left);
+	colorStop(rad);
 	if (rad > 90) {
 		return false;
 	} else {
@@ -210,6 +292,15 @@ function checkY(y) {
 		return false;
 	} else {
 		return true;
+	}
+}
+
+function colorStop(rad) {
+	var stop = document.getElementById('stop'); 
+	if (rad > 5) {
+		stop.style.backgroundColor = "red";
+	} else {
+		stop.style.backgroundColor = "gray";
 	}
 }
 
@@ -247,13 +338,73 @@ function drawJoystick() {
 </script>
 </head>
 <body onload="wireTouch();">
-	<div id="redsquare"></div>
-	<div id="bluesquare"></div>
+	<div id="rotate">
+		<div id="inner">Please switch to landscape mode!</div>
+	</div>
+	<div id="settings">
+		<h3>Settings</h3>
+		<p>
+			<form>
+				<fieldset>
+					<legend>Direction of servos and motors</legend>
+					<input type="checkbox">Invert servo L</input><br />
+					<input type="checkbox">Invert servo R</input><br />
+					<input type="checkbox">Invert motor L</input><br />
+					<input type="checkbox">Invert motor R</input>
+				</fieldset>
+				<fieldset>
+					<legend>User interface</legend>
+					<input type="radio" name="joystick" checked>Show joystick</input><br />
+					<input type="radio" name="joystick">Show two sliders</input>
+				</fieldset>
+			</form>
+		</p>
+		<div id="close">Close settings</div>
+	</div>
 	<div id="stop"><div class="rotatetext">STOP</div></div>
 	<div id="fgcontainer"><canvas id="joycanv" width="84" height="84" /></div>
 	<div id="bgcontainer"><canvas id="joybg" width="252" height="252" /></div>
 	<div id="slider1bg"></div>
 	<div id="slider2bg"></div>
-	<div id="slider1"></div>
-	<div id="slider2"></div>
+	<div id="slider1">Servo L</div>
+	<div id="slider2">Servo R</div>
+	<div id="iconsettings">
+		<svg id="svg7384" width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <metadata id="metadata90">
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title>Gnome Symbolic Icon Theme</dc:title>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <title id="title9167">Gnome Symbolic Icon Theme</title>
+ <g id="g4953" transform="translate(-641 -461)">
+  <path id="path10065" d="m649 462c-0.22065 0-0.44081 0.0113-0.65625 0.0312l-0.40625 2.0938c-0.33446 0.0733-0.66305 0.17589-0.96875 0.3125l-1.5312-1.4688c-0.38863 0.23011-0.72695 0.51408-1.0625 0.8125l0.90625 1.9062c-0.22242 0.24899-0.42425 0.5225-0.59375 0.8125l-2.0938-0.28125c-0.17772 0.40877-0.30872 0.83637-0.40625 1.2812l1.8438 1c-0.0171 0.16809-0.0312 0.3274-0.0312 0.5s0.0142 0.33191 0.0312 0.5l-1.8438 1c0.0975 0.44488 0.22853 0.87248 0.40625 1.2812l2.0938-0.28125c0.1695 0.29 0.37133 0.56351 0.59375 0.8125l-0.90625 1.9062c0.33555 0.29842 0.67387 0.58239 1.0625 0.8125l1.5312-1.4688c0.3057 0.13661 0.63429 0.23916 0.96875 0.3125l0.40625 2.0938c0.21544 0.02 0.4356 0.0312 0.65625 0.0312s0.44081-0.0113 0.65625-0.0312l0.40625-2.0938c0.33446-0.0733 0.66305-0.17589 0.96875-0.3125l1.5312 1.4688c0.38863-0.23011 0.72695-0.51408 1.0625-0.8125l-0.90625-1.9062c0.22242-0.24899 0.42425-0.5225 0.59375-0.8125l2.0938 0.28125c0.17772-0.40877 0.30872-0.83637 0.40625-1.2812l-1.8438-1c0.0171-0.16809 0.0312-0.3274 0.0312-0.5s-0.0142-0.33191-0.0312-0.5l1.8438-1c-0.0975-0.44488-0.22853-0.87248-0.40625-1.2812l-2.0938 0.28125c-0.1695-0.29-0.37133-0.56351-0.59375-0.8125l0.90625-1.9062c-0.33555-0.29842-0.67387-0.58239-1.0625-0.8125l-1.5312 1.4688c-0.3057-0.13661-0.63429-0.23916-0.96875-0.3125l-0.40625-2.0938c-0.21544-0.02-0.4356-0.0312-0.65625-0.0312zm0 4c1.6568 0 3 1.3432 3 3s-1.3432 3-3 3-3-1.3432-3-3 1.3432-3 3-3z" style="color:#000000;fill:#bebebe"/>
+ </g>
+</svg>
+	</div>
+	<div id="iconbattery">
+		<svg id="svg7384" width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <metadata id="metadata90">
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title>Gnome Symbolic Icon Theme</dc:title>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <title id="title9167">Gnome Symbolic Icon Theme</title>
+ <g id="layer9" transform="translate(-101 -217)">
+  <path id="rect6060-0" class="error" d="m106 228v2h2.0002v-2l-2.0002 1e-5z" style="fill:#c00"/>
+  <path id="path6062-4" d="m106.47 217c-0.49033 0-0.79607 0.22846-1.0312 0.46875s-0.4375 0.5585-0.4375 1.0312v0.5h-1-1v1 12 1h1 4v-2h-3v-10h1 1v-1-1h4v1 1h1 1v3h2v-4-1h-1-1v-0.375-0.0312-0.0312c-0.0239-0.4306-0.17023-0.72105-0.40625-1-0.22374-0.26444-0.6267-0.52931-1.1562-0.53125v-0.0312h-0.0625-4.9062z" style="block-progression:tb;color:#bebebe;fill:#bebebe;text-indent:0;text-transform:none"/>
+  <path id="rect6718-3" class="warning" d="m109.88 225c-0.49245 0-0.875 0.38256-0.875 0.875v6.25c0 0.49244 0.38255 0.875 0.875 0.875h6.25c0.49245 0 0.875-0.38256 0.875-0.875v-6.25c0-0.49244-0.38255-0.875-0.875-0.875h-6.25zm2.125 1h2v4h-2v-4zm0 5h2v1h-2v-1z" style="color:#bebebe;fill:#f57900"/>
+ </g>
+</svg>
+	</div>
+	<div id="iconeitech">
+		<a href="https://www.eitech.de/marken-und-produkte/eitech/die-marke/" target="_blank"><img alt="Eitech Logo" src="data:image/png;base64,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" /></a>
+	</div>
 </body>
