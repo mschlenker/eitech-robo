@@ -50,7 +50,6 @@ body {
 	
 	#settings {
 		background-color: whitesmoke;
-		height: 100%;
 		width: 100%;
 		position: fixed;
 		top: 0;
@@ -204,6 +203,11 @@ body {
 		transform: scale(5.2); 
 	}
 	
+	fieldset {
+		display: block;
+		width: 45%; 
+		float: left; 
+	}
 }
 
 </style>
@@ -349,13 +353,27 @@ function drawJoystick() {
 					<legend>Direction of servos and motors</legend>
 					<input type="checkbox">Invert servo L</input><br />
 					<input type="checkbox">Invert servo R</input><br />
-					<input type="checkbox">Invert motor L</input><br />
-					<input type="checkbox">Invert motor R</input>
+					<input type="checkbox">Invert motor M1 (left)</input><br />
+					<input type="checkbox">Invert motor M2 (right)</input><br />
+					<input type="checkbox">Invert motor M3</input><br />
+					<input type="checkbox">Invert motor M4</input>
 				</fieldset>
 				<fieldset>
 					<legend>User interface</legend>
 					<input type="radio" name="joystick" checked>Show joystick</input><br />
-					<input type="radio" name="joystick">Show two sliders</input>
+					<input type="radio" name="joystick">Show two sliders</input><br />
+					<input type="checkbox">Show slider M3</input><br />
+					<input type="checkbox">Show slider M4</input><br />
+					<input type="checkbox">Show slider S1</input>
+				</fieldset>
+				<fieldset>
+					<legend>Labels</legend>
+					<input type="text" size="30" value="Servo L"></input>
+					<input type="text" size="30" value="Servo R"></input>
+					<input type="text" size="30" value="Motor 1"></input>
+					<input type="text" size="30" value="Motor 2"></input>
+					<input type="text" size="30" value="Motor 3"></input>
+					<input type="text" size="30" value="Switch 1"></input>
 				</fieldset>
 			</form>
 		</p>
