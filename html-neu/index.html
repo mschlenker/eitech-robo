@@ -12,7 +12,7 @@ body {
 	padding: 0; 
 }
 
-#stop, #fgcontainer, #bgcontainer, #slider1bg, #slider2bg, #slider1, #slider2, #iconsettings, #iconbattery, #iconeitech, #settings  {
+#slidersleft, #fgcontainer, #bgcontainer, #fgcontainerred, #slidersleft, #slidersright, #iconsettings, #iconbattery, #iconeitech, #settings  {
 	display: none; 
 }
 
@@ -51,7 +51,8 @@ body {
 	#settings {
 		background-color: whitesmoke;
 		width: 100%;
-		position: fixed;
+		height: 120vh; 
+		position: absolute;
 		top: 0;
 		bottom: 0;
 		padding: 0px;
@@ -63,22 +64,17 @@ body {
 	#settings #close {
 		margin: 0;
 		position: absolute;
-		bottom: 30px;
-		right: 30px;
+		top: 15px;
+		right: -12px;
 		font-weight: bold; 
+		width: 42px;
+		height: 42px; 
+	}
+	
+	#settings #close svg {
+		transform: scale(2.5); 
 	}
 
-	#stop {
-		background-color: gray;
-		position: fixed;
-		bottom: 84px;
-		right: -84px;
-		height: 84px;
-		width: 252px;
-		z-index: 50;
-		transform: rotate(270deg);
-		display: block; 
-	}
 	#stop .rotatetext {
 		font-size: 70px;
 		color: white;
@@ -89,8 +85,8 @@ body {
 	#bgcontainer {
 		background-color: whitesmoke;
 		position: fixed;
-		bottom: 0;
-		right: 84px;
+		bottom: calc(50vh - 126px);
+		right: 0px;
 		height: 252px;
 		width: 252px;
 		z-index: 5;
@@ -100,8 +96,8 @@ body {
 	}
 	#fgcontainer {
 		position: fixed;
-		bottom: 84px;
-		right: 168px;
+		bottom: calc(50vh - 42px);
+		right: 84px;
 		height: 84px;
 		width: 84px;
 		z-index: 20; 
@@ -109,85 +105,150 @@ body {
 		margin: 0;
 		display: block; 
 	}
-	#slider1bg {
+	#fgcontainerred {
 		position: fixed;
-		bottom: 10px;
-		left: 137px;
-		height: 232px;
-		width: 20px;
-		z-index: 12; 
-		background-color: lightgray;
-		border-width: 1px;
-		border-style: solid;
-		border-color: gray;
-		display: block; 
-	}
-	#slider2bg {
-		position: fixed;
-		bottom: 10px;
-		left: 242px;
-		height: 232px;
-		width: 20px;
-		z-index: 12; 
-		background-color: lightgray;
-		border-width: 1px;
-		border-style: solid;
-		border-color: gray;
-		display: block; 
-	}
-	#slider1 {
-		position: fixed;
-		bottom: 116px;
-		left: 105px;
-		height: 20px;
+		bottom: calc(50vh - 42px);
+		right: 84px;
+		height: 84px;
 		width: 84px;
-		z-index: 15; 
-		background-color: darkgray;
-		border-width: 1px;
-		border-style: solid;
-		border-color: black;
+		z-index: 18; 
+		padding: 0;
+		margin: 0;
 		display: block; 
 	}
-	#slider2 {
-		position: fixed;
-		bottom: 116px;
-		left: 210px;
-		height: 20px;
+	#stopjoy {
+		position: absolute;
+		top: 30px;
+		left: 0;
 		width: 84px;
-		z-index: 15; 
-		background-color: darkgray;
-		border-width: 1px;
-		border-style: solid;
-		border-color: black;
-		display: block; 
+		font-family: sans-serif; 
+		text-align: center;
+		font-weight: bold;
+		color: white;
+		font-size: 24px; 
 	}
-	#slider1, #slider2 {
+	#slidersleft {
+		position: fixed;
+		bottom: calc(50vh - 126px);
+		left: 0px;
+		height: 252px;
+		display: block; 
+		width: 450px;
+	}
+	#slidersright {
+		position: fixed;
+		bottom: calc(50vh - 126px);
+		right: 0px;
+		height: 252px;
+		display: none; 
+	}
+
+	#slider1, #slider2, #sliderm2, #sliderm4, #sliderm4r, #sliderm1, #sliderm3, #sliders1 {
+		position: absolute;
+		bottom: 116px;
+		left: 2px;
+		height: 20px;
+		width: 78px;
+		z-index: 15; 
 		text-align: center;
 		font-size: 16px;
 		padding-top: 3px;
 		font-family: sans-serif;
 		font-weight: bold; 
+		border-width: 1px;
+		border-style: solid;
+		border-color: black;
+		background-color: lightgray; 
+		display: block; 
+	}
+	
+	#sliders1 {
+		position: absolute;
+		bottom: 0px;
+		left: 2px;
+		height: 20px;
+		width: 78px;
+	}
+	
+	.motorstop, .switchstop {
+		position: absolute;
+		bottom: 116px;
+		left: 2px;
+		height: 20px;
+		width: 78px;
+		z-index: 14; 
+		text-align: center;
+		font-size: 16px;
+		padding-top: 3px;
+		font-family: sans-serif;
+		font-weight: bold; 
+		border-width: 1px;
+		border-style: solid;
+		border-color: red;
+		background-color: red;
+		color: white;
+		display: block; 
+	}
+	
+	.switchstop {
+		position: absolute;
+		bottom: 0px;
+		left: 2px;
+		height: 20px;
+		width: 78px;
+	}
+	
+	#slider1bg, #slider2bg, #sliderm2bg, #sliderm4bg, #sliderm4rbg, #sliderm1bg, #sliderm3bg, #sliders1bg {
+		position: absolute;
+		bottom: 8px;
+		left: 39px;
+		height: 236px;
+		width: 10px;
+		z-index: 13; 
+		border-width: 1px;
+		border-style: solid;
+		border-color: darkgray;
+		background-color: lightgray; 
+		display: block; 
+	}
+	
+	.centerservo {
+		position: absolute;
+		bottom: 125px;
+		left: 1px;
+		height: 2px;
+		width: 82px;
+		z-index: 14; 
+		background-color: black; 
 		display: block; 
 	}
 	
 	#iconsettings {
 		position: fixed;
-		bottom: -36px;
-		left: 32px;
-		z-index: 12; 
+		bottom: -14px;
+		right: -14px;
+		z-index: 22; 
 		display: block; 
+		width: 40px;
+		height: 40px;
+	}
+	div.sliderbox {
+		position: relative;
 		width: 84px;
-		height: 84px;
+		height: 250px;
+		padding: 0;
+		margin: 0;
+		float: left;
 	}
 	
 	#iconbattery {
 		position: fixed;
-		bottom: 48px;
-		left: 32px;
+		top: 14px;
+		right: -14px;
 		z-index: 12; 
 		display: block; 
-		width: 84px;
-		height: 84px;
+		width: 40px;
+		height: 40px;
 	}
 	
 	#iconeitech {
@@ -195,23 +256,37 @@ body {
 		bottom: 170px;
 		left: 0px;
 		z-index: 12; 
-		display: block; 
+		display: none; 
 		width: 84px;
 	}
 	
-	#iconsettings svg, #iconbattery svg {
-		transform: scale(5.2); 
+	#iconbattery svg {
+		transform: scale(2.5); 
+	}
+	#iconsettings svg {
+		transform: scale(2.5); 
 	}
 	
 	fieldset {
 		display: block;
-		width: 45%; 
+		width: 40vw; 
+		margin: 2vh; 
+	}
+	div.groupfields {
 		float: left; 
+		margin: 0;
+		padding: 0; 
 	}
 }
 
 </style>
 <script>
+var lastSendTime = 0;
+var transmitInterval = 100; // 100ms interval, don't send too often
+var timer = null;
+var car = { speed: 0, dir: 0, motorR: 0, motorL: 0 };
+var readBack = {};
+
 function wireTouch() {
 	var obh = document.getElementById("fgcontainer");
 	obh.addEventListener('touchmove', function(event) {
@@ -224,6 +299,7 @@ function wireTouch() {
 				obh.style.top = (touch.pageY - 42) + 'px';
 			}
 		}
+		if(!timer) timer = setInterval(sendToServer, 300); 
 	}, false);
 	var obm = document.getElementById("slider1");
 	obm.addEventListener('touchmove', function(event) {
@@ -232,8 +308,7 @@ function wireTouch() {
 			var touch = event.targetTouches[0];
 			if (checkY(touch.pageY)) {
 				// Place element where the finger is
-				// obm.style.left = (touch.pageX - 42) + 'px';
-				obm.style.top = (touch.pageY - 10) + 'px';
+				obm.style.top = (touch.pageY - document.getElementById("slidersleft").getBoundingClientRect().top - 10) + 'px';
 			}
 		}
 	}, false);
@@ -244,21 +319,116 @@ function wireTouch() {
 			var touch = event.targetTouches[0];
 			if (checkY(touch.pageY)) {
 				// Place element where the finger is
-				// obn.style.left = (touch.pageX - 42) + 'px';
-				obn.style.top = (touch.pageY - 10) + 'px';
+				obn.style.top = (touch.pageY - document.getElementById("slidersleft").getBoundingClientRect().top - 10) + 'px';
 			}
 		}
 	}, false);
-	var stop = document.getElementById('stop'); 
+	var obo = document.getElementById("sliderm2");
+	obo.addEventListener('touchmove', function(event) {
+		// If there's exactly one finger inside this element
+		if (event.targetTouches.length == 1) {
+			var touch = event.targetTouches[0];
+			if (checkY(touch.pageY)) {
+				// Place element where the finger is
+				obo.style.top = (touch.pageY - document.getElementById("slidersleft").getBoundingClientRect().top - 10) + 'px';
+			}
+		}
+	}, false);
+	var obp = document.getElementById("sliderm4");
+	obp.addEventListener('touchmove', function(event) {
+		// If there's exactly one finger inside this element
+		if (event.targetTouches.length == 1) {
+			var touch = event.targetTouches[0];
+			if (checkY(touch.pageY)) {
+				// Place element where the finger is
+				obp.style.top = (touch.pageY - document.getElementById("slidersleft").getBoundingClientRect().top - 10) + 'px';
+			}
+		}
+	}, false);
+	var obq = document.getElementById("sliders1");
+	obq.addEventListener('touchmove', function(event) {
+		// If there's exactly one finger inside this element
+		if (event.targetTouches.length == 1) {
+			var touch = event.targetTouches[0];
+			if (checkY(touch.pageY)) {
+				// Place element where the finger is
+				obq.style.top = (touch.pageY - document.getElementById("slidersleft").getBoundingClientRect().top - 10) + 'px';
+			}
+		}
+	}, false);
+	var obr = document.getElementById("sliderm1");
+	obr.addEventListener('touchmove', function(event) {
+		// If there's exactly one finger inside this element
+		if (event.targetTouches.length == 1) {
+			var touch = event.targetTouches[0];
+			if (checkY(touch.pageY)) {
+				// Place element where the finger is
+				obr.style.top = (touch.pageY - document.getElementById("slidersright").getBoundingClientRect().top - 10) + 'px';
+			}
+		}
+	}, false);
+	var obs = document.getElementById("sliderm3");
+	obs.addEventListener('touchmove', function(event) {
+		// If there's exactly one finger inside this element
+		if (event.targetTouches.length == 1) {
+			var touch = event.targetTouches[0];
+			if (checkY(touch.pageY)) {
+				// Place element where the finger is
+				obs.style.top = (touch.pageY - document.getElementById("slidersright").getBoundingClientRect().top - 10) + 'px';
+			}
+		}
+	}, false);
+	
+	var stop = document.getElementById('fgcontainerred'); 
 	stop.addEventListener("click", function(event) {
-		stop.style.backgroundColor = "gray";
+		// stop.style.backgroundColor = "gray";
 		var box = document.getElementById('bgcontainer').getBoundingClientRect();
 		var boxcx = ( box.right + box.left) / 2;
 		var boxcy = ( box.top + box.bottom) / 2;
 		var obh = document.getElementById("fgcontainer");
 		obh.style.left = (boxcx - 42) + 'px';
 		obh.style.top = (boxcy - 42) + 'px';
+		car.speed = 0.0
+		car.dir = 0.0;
+		car.motorL = 0.0;
+		car.motorR = 0.0;
 	}, false); 
+	
+	var mstop2 = document.getElementById("sliderm2").nextSibling; 
+	mstop2.addEventListener("click", function(event) {
+		document.getElementById("sliderm2").style.top = (mstop2.getBoundingClientRect().top - document.getElementById("slidersleft").getBoundingClientRect().top) + "px";
+	}, false); 
+	
+	var mstop4 = document.getElementById("sliderm4").nextSibling; 
+	mstop4.addEventListener("click", function(event) {
+		document.getElementById("sliderm4").style.top = (mstop4.getBoundingClientRect().top - document.getElementById("slidersleft").getBoundingClientRect().top) + "px";
+	}, false); 
+	
+	var mstop1 = document.getElementById("sliderm1").nextSibling; 
+	mstop1.addEventListener("click", function(event) {
+		document.getElementById("sliderm1").style.top = (mstop1.getBoundingClientRect().top - document.getElementById("slidersleft").getBoundingClientRect().top) + "px";
+	}, false); 
+	
+	var mstop3 = document.getElementById("sliderm3").nextSibling; 
+	mstop3.addEventListener("click", function(event) {
+		document.getElementById("sliderm3").style.top = (mstop3.getBoundingClientRect().top - document.getElementById("slidersleft").getBoundingClientRect().top) + "px";
+	}, false); 
+	
+	var sstop = document.getElementsByClassName('switchstop')[0];
+	sstop.addEventListener("click", function(event) {
+		document.getElementById("sliders1").style.top = (sstop.getBoundingClientRect().top - document.getElementById("slidersleft").getBoundingClientRect().top) + "px";
+	}, false); 
+	
+	// make non default elements invisible
+	var nondef = [ "sliderm2", "sliderm4", "sliderm4r", "sliderm3l", "sliders1" ];
+	for (var l=0; l<nondef.length; l++) {
+		console.log(nondef[l]);
+		document.getElementById(nondef[l]).parentElement.style.display = "none"; 
+	}
+	
+	// wire settings
+	
+	
 	var iconsettings = document.getElementById('iconsettings');
 	iconsettings.addEventListener("click", function(event) {
 		var settings = document.getElementById('settings');
@@ -270,6 +440,7 @@ function wireTouch() {
 		settings.style.display = "none";
 	}, false); 
 	drawBg();
+	drawRedStop();
 	drawJoystick();
 	// alert("Width: " + window.innerWidth + ", Height: " + window.innerHeight); 
 }
@@ -278,13 +449,26 @@ function checkInside(x, y) {
 	var box = document.getElementById('bgcontainer').getBoundingClientRect();
 	var boxcx = ( box.right + box.left) / 2;
 	var boxcy = ( box.top + box.bottom) / 2;
-	var rad = Math.sqrt( Math.pow( x - boxcx, 2) + Math.pow( y - boxcy, 2));
-	console.log("X: " + x + ", Y: " + y + ", Radius: " + rad); 
+	var rad = Math.sqrt( Math.pow( boxcx - x, 2) + Math.pow( boxcy - y, 2));
+	console.log("X: " + (x - boxcx) + ", Y: " + (boxcy - y) + ", Radius: " + rad); 
 	// console.log(box.top, box.right, box.bottom, box.left);
-	colorStop(rad);
-	if (rad > 90) {
+	if (rad > 95) {
 		return false;
 	} else {
+		// calc motor value
+		var motorL = -255.0 * 1.41 * car.speed * Math.cos(car.dir - Math.PI/4); // -45 degree
+		var motorR = -255.0 * 1.41 * car.speed * Math.sin(car.dir - Math.PI/4);
+
+		// limit to +/-255
+		if     (motorL >  255) { motorL =  255; }
+		else if(motorL < -255) { motorL = -255; }
+		if     (motorR >  255) { motorR =  255; }
+		else if(motorR < -255) { motorR = -255; }
+	
+		car.motorR = motorR;
+		car.motorL = motorL; 
+		car.speed = rad / 85.0
+		car.dir = Math.atan2( y - boxcy, boxcx - x);
 		return true;
 	}
 }
@@ -296,15 +480,6 @@ function checkY(y) {
 		return false;
 	} else {
 		return true;
-	}
-}
-
-function colorStop(rad) {
-	var stop = document.getElementById('stop'); 
-	if (rad > 5) {
-		stop.style.backgroundColor = "red";
-	} else {
-		stop.style.backgroundColor = "gray";
 	}
 }
 
@@ -339,6 +514,99 @@ function drawJoystick() {
 	context.strokeStyle = 'black';
 	context.stroke();
 }
+
+function drawRedStop() {
+	var canvas = document.getElementById('redstop');
+	var context = canvas.getContext('2d');
+	var centerX = canvas.width / 2;
+	var centerY = canvas.height / 2;
+	var radius = 41;
+
+	context.beginPath();
+	context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+	context.fillStyle = 'red';
+	context.fill();
+	context.lineWidth = 1;
+	context.strokeStyle = 'black';
+	context.stroke();
+}
+
+function sendToServer(){
+	
+	
+	var json;
+	var now = new Date().getTime();
+	if(((now-lastSendTime) > transmitInterval) || (car.speed == 0)) {
+		lastSendTime = now;
+		var xmlHttp = new XMLHttpRequest();
+		xmlHttp.onreadystatechange = function() {
+			if(xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+				json = xmlHttp.responseText;
+				readBack = JSON.parse(json);
+			}
+		};
+		// url = /M/motorL/motorR
+		var url = "/car/"+Math.round(car.motorL)+"/"+Math.round(car.motorR);
+		xmlHttp.open("GET", url, true);
+		xmlHttp.send(null);
+	}
+}
+
+// 
+function showjoystick() {
+	var elements = [ "fgcontainer", "fgcontainerred", "bgcontainer" ];
+	for (var i=0; i<elements.length; i++) {
+		document.getElementById(elements[i]).style.display = "block";
+	}
+	document.getElementById("slidersright").style.display = "none";
+	return false;
+}
+
+function showsliders() {
+	var elements = [ "fgcontainer", "fgcontainerred", "bgcontainer" ];
+	for (var i=0; i<elements.length; i++) {
+		document.getElementById(elements[i]).style.display = "none";
+	}
+	document.getElementById("slidersright").style.display = "block";
+	return false;
+}
+
+function toggleslider2(c) {
+	var box = document.getElementById("sliderm2");
+	if (c.checked) {
+		box.parentElement.style.display = "block";
+	} else {
+		box.parentElement.style.display = "none";
+	}
+}
+
+function toggleslider3(c) {
+	var box = document.getElementById("sliderm3");
+	if (c.checked) {
+		box.parentElement.style.display = "block";
+	} else {
+		box.parentElement.style.display = "none";
+	}
+}
+
+function toggleslider4(c) {
+	var box = document.getElementById("sliderm4");
+	if (c.checked) {
+		box.parentElement.style.display = "block";
+	} else {
+		box.parentElement.style.display = "none";
+	}
+}
+
+function togglesliderswitch(c) {
+	var box = document.getElementById("sliders1");
+	if (c.checked) {
+		box.parentElement.style.display = "block";
+	} else {
+		box.parentElement.style.display = "none";
+	}
+}
+
 </script>
 </head>
 <body onload="wireTouch();">
@@ -346,46 +614,124 @@ function drawJoystick() {
 		<div id="inner">Please switch to landscape mode!</div>
 	</div>
 	<div id="settings">
+		<div id="close"><svg id="svg7384" width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <metadata id="metadata90">
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title>Gnome Symbolic Icon Theme</dc:title>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <title id="title9167">Gnome Symbolic Icon Theme</title>
+ <g id="layer12" transform="translate(-241 -807)">
+  <path id="path26772" d="m257 812v1c0 0.25689-0.12983 0.52846-0.3125 0.71875l-1.2812 1.2812 1.2812 1.2812c0.18267 0.19029 0.3125 0.46186 0.3125 0.71875v1h-1c-0.30945 0-0.55232-0.0903-0.75-0.28125l-2.6562-2.7188 2.6562-2.7188c0.19768-0.19095 0.44055-0.28125 0.75-0.28125h1z" style="block-progression:tb;color:#bebebe;fill:#bebebe;text-indent:0;text-transform:none"/>
+  <path id="rect26776" d="m242 808v14h10v-14h-10zm7 2h1v10h-6l5-3v-7zm-3 2h2v1h-2v-1z" style="color:#000000;enable-background:new;fill:#bebebe"/>
+ </g>
+</svg></div>
 		<h3>Settings</h3>
 		<p>
 			<form>
+				<div class="groupfields">
 				<fieldset>
 					<legend>Direction of servos and motors</legend>
-					<input type="checkbox">Invert servo L</input><br />
-					<input type="checkbox">Invert servo R</input><br />
 					<input type="checkbox">Invert motor M1 (left)</input><br />
-					<input type="checkbox">Invert motor M2 (right)</input><br />
-					<input type="checkbox">Invert motor M3</input><br />
-					<input type="checkbox">Invert motor M4</input>
+					<input type="checkbox">Invert motor M3 (right)</input><br />
+					<input type="checkbox">Invert motor M4</input><br />
+					<input type="checkbox">Invert motor M2 (no PWM!)</input><br />
+					<input type="checkbox">Invert servo L</input><br />
+					<input type="checkbox">Invert servo R</input>
 				</fieldset>
 				<fieldset>
 					<legend>User interface</legend>
-					<input type="radio" name="joystick" checked>Show joystick</input><br />
-					<input type="radio" name="joystick">Show two sliders</input><br />
-					<input type="checkbox">Show slider M3</input><br />
-					<input type="checkbox">Show slider M4</input><br />
-					<input type="checkbox">Show slider S1</input>
+					<input type="radio" name="joystick" checked id='showjoym1m3' onClick="showjoystick();">Show joystick (M1 and M3)</input><br />
+					<input type="radio" name="joystick" id='showjoym1s1' onClick="showjoystick();">Show joystick (M1 and servo 1)</input><br />
+					<input type="radio" name="joystick" id='showonlysliders' onClick="showsliders();">Show two sliders</input><br />
+					<input type="checkbox" disabled onClick="toggleslider3(this);">Show slider M3</input><br />
+					<input type="checkbox" onClick="toggleslider4(this);">Show slider M4</input><br />
+					<input type="checkbox" onClick="toggleslider2(this);">Show slider M2 (no PWM!)</input><br />
+					<input type="checkbox" onClick="togglesliderswitch(this);">Show slider S1</input><br />
+					<input type="checkbox" onClick="togglesliderservo1(this);" checked>Show slider servo 1</input><br />
+					<input type="checkbox" onClick="togglesliderservo2(this);" checked>Show slider servo 2</input>
+				</fieldset>
+				</div>
+				<div class="groupfields">
+				<fieldset>
+					<legend>Behaviour of S1 slider</legend>
+					<input type="radio" name="s1behaviour" checked>Linear modulation</input><br />
+					<input type="radio" name="s1behaviour">On/off</input><br />
+					<input type="radio" name="s1behaviour">Sinus wave (rotating beacon)</input><br />
+					<input type="radio" name="s1behaviour">Hard flash</input>
 				</fieldset>
 				<fieldset>
-					<legend>Labels</legend>
-					<input type="text" size="30" value="Servo L"></input>
-					<input type="text" size="30" value="Servo R"></input>
-					<input type="text" size="30" value="Motor 1"></input>
-					<input type="text" size="30" value="Motor 2"></input>
-					<input type="text" size="30" value="Motor 3"></input>
-					<input type="text" size="30" value="Switch 1"></input>
+					<legend>Language</legend>
+					<select name="language">
+						<option value="de">Deutsch</option>
+						<option value="en" selected>English</option>
+						<option value="es">Espa&ntilde;ol</option>
+						<option value="fr">Fran&ccedil;ais</option>
+					</select>
 				</fieldset>
+				<fieldset>
+					<legend>Labels for sliders</legend>
+					<input type="text" size="26" value="Servo L"></input><br />
+					<input type="text" size="26" value="Servo R"></input><br />
+					<input type="text" size="26" value="Motor 1"></input><br />
+					<input type="text" size="26" value="Motor 2"></input><br />
+					<input type="text" size="26" value="Motor 3"></input><br />
+					<input type="text" size="26" value="Motor 4"></input><br />
+					<input type="text" size="26" value="Switch 1"></input>
+				</fieldset>
+				</div>
 			</form>
 		</p>
-		<div id="close">Close settings</div>
 	</div>
-	<div id="stop"><div class="rotatetext">STOP</div></div>
 	<div id="fgcontainer"><canvas id="joycanv" width="84" height="84" /></div>
 	<div id="bgcontainer"><canvas id="joybg" width="252" height="252" /></div>
-	<div id="slider1bg"></div>
-	<div id="slider2bg"></div>
-	<div id="slider1">Servo L</div>
-	<div id="slider2">Servo R</div>
+	<div id="fgcontainerred"><div id="stopjoy">STOP</div><canvas id="redstop" width="84" height="84" /></div>
+	<div id="slidersleft">
+		<div class="sliderbox">
+			<div id="slider1bg"></div>
+			<div id="slider1">Servo L</div>
+			<div class="centerservo"></div>
+		</div>
+		<div class="sliderbox">
+			<div id="slider2bg"></div>
+			<div id="slider2">Servo R</div>
+			<div class="centerservo"></div>
+		</div>
+		<div class="sliderbox">
+			<div id="sliderm2bg"></div>
+			<div id="sliderm2">Motor 2</div><div class="motorstop">STOP</div>
+		</div>
+		<div class="sliderbox">
+			<div id="sliderm4bg"></div>
+			<div id="sliderm4">Motor 4</div><div class="motorstop">STOP</div>
+		</div>
+		<div class="sliderbox">
+			<div id="sliderm3lbg"></div>
+			<div id="sliderm3l">Motor 3</div><div class="motorstop">STOP</div>
+		</div>
+		<div class="sliderbox">
+			<div id="sliders1bg"></div>
+			<div id="sliders1">Switch 1</div><div class="switchstop">STOP</div>
+		</div>
+	</div>
+	<div id="slidersright">
+		<div class="sliderbox">
+			<div id="sliderm4rbg"></div>
+			<div id="sliderm4r">Motor 4</div><div class="motorstop">STOP</div>
+		</div>
+		<div class="sliderbox">
+			<div id="sliderm1bg"></div>
+			<div id="sliderm1">Motor 1</div><div class="motorstop">STOP</div>
+		</div>
+		<div class="sliderbox">
+			<div id="sliderm3bg"></div>
+			<div id="sliderm3">Motor 3</div><div class="motorstop">STOP</div>
+		</div>
+	</div>
 	<div id="iconsettings">
 		<svg id="svg7384" width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
  <metadata id="metadata90">
