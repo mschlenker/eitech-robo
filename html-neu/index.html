@@ -738,6 +738,7 @@ function toggleslider4(c) {
 	} else {
 		document.getElementById("slidersleft").appendChild(document.getElementById("sliderm4").parentElement);
 	}
+	return false; 
 }
 
 function togglesliderswitch(c) {
@@ -756,6 +757,7 @@ function togglesliderservo1(c) {
 	} else {
 		box.parentElement.style.display = "none";
 	}
+	return false; 
 }
 
 function togglesliderservo2(c) {
@@ -765,6 +767,7 @@ function togglesliderservo2(c) {
 	} else {
 		box.parentElement.style.display = "none";
 	}
+	return false; 
 }
 
 function toggleinvert(c) {
@@ -774,45 +777,57 @@ function toggleinvert(c) {
 		} else {
 			invert.motorL = 1.0;
 		}
-	}
-	if (c.getAttribute("id") == "invertmr") {
+	} else if (c.getAttribute("id") == "invertmr") {
 		if (c.checked) {
 			invert.motorR = -1.0;
 		} else {
 			invert.motorR = 1.0;
 		}
-	}
-	if (c.getAttribute("id") == "invertm2") {
+	} else if (c.getAttribute("id") == "invertm2") {
 		if (c.checked) {
 			invert.motor2 = -1.0;
 		} else {
 			invert.motor2 = 1.0;
 		}
-	}
-	if (c.getAttribute("id") == "invertm4") {
+	} else if (c.getAttribute("id") == "invertm4") {
 		if (c.checked) {
 			invert.motor4 = -1.0;
 		} else {
 			invert.motor4 = 1.0;
 		}
-	}
-	if (c.getAttribute("id") == "inverts1") {
+	} else if (c.getAttribute("id") == "inverts1") {
 		if (c.checked) {
 			invert.servoL = -1.0;
 		} else {
 			invert.servoL = 1.0;
 		}
-	}
-	if (c.getAttribute("id") == "inverts2") {
+	} else if (c.getAttribute("id") == "inverts2") {
 		if (c.checked) {
 			invert.servoR = -1.0;
 		} else {
 			invert.servoR = 1.0;
 		}
 	}
+	return false;
 }
 function updatelabel(c) {
 	console.log(c.value); 
+	if (c.getAttribute("id") == "labelservol") {
+		document.getElementById("slider1").innerHTML = c.value;
+	} else if (c.getAttribute("id") == "labelservor") {
+		document.getElementById("slider2").innerHTML = c.value;
+	} else if (c.getAttribute("id") == "labelmotorl") {
+		document.getElementById("sliderm1").innerHTML = c.value;
+	} else if (c.getAttribute("id") == "labelmotorr") {
+		document.getElementById("sliderm3").innerHTML = c.value;
+	} else if (c.getAttribute("id") == "labelmotor2") {
+		document.getElementById("sliderm2").innerHTML = c.value;
+	} else if (c.getAttribute("id") == "labelmotor4") {
+		document.getElementById("sliderm4").innerHTML = c.value;
+	} else if (c.getAttribute("id") == "labelswitch1") {
+		document.getElementById("sliders1").innerHTML = c.value;
+	}
+	return false;
 }
 
 </script>
