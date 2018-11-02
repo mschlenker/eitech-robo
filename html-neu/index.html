@@ -223,15 +223,6 @@ body {
 		display: block; 
 	}
 	
-	#iconsettings {
-		position: fixed;
-		bottom: -14px;
-		right: -14px;
-		z-index: 22; 
-		display: block; 
-		width: 40px;
-		height: 40px;
-	}
 	div.sliderbox {
 		position: relative;
 		width: 84px;
@@ -241,9 +232,19 @@ body {
 		float: left;
 	}
 	
-	#iconbattery {
+	#iconsettings {
 		position: fixed;
 		top: 14px;
+		right: -14px;
+		z-index: 22; 
+		display: block; 
+		width: 40px;
+		height: 40px;
+	}
+	
+	#iconbattery {
+		position: fixed;
+		bottom: -14px;
 		right: -14px;
 		z-index: 12; 
 		display: block; 
@@ -284,7 +285,18 @@ body {
 var lastSendTime = 0;
 var transmitInterval = 100; // 100ms interval, don't send too often
 var timer = null;
-var car = { speed: 0, dir: 0, motorR: 0, motorL: 0 };
+var car = { 
+	speed: 0, 
+	dir: 0, 
+	motorR: 0, 
+	motorL: 0, 
+	servoL: 0,
+	servoR: 0,
+	motor2: 0,
+	motor4: 0,
+	switchMode: 0,
+	switch1: 0
+};
 var readBack = {};
 
 function wireTouch() {
@@ -307,9 +319,15 @@ function wireTouch() {
 		if (event.targetTouches.length == 1) {
 			var touch = event.targetTouches[0];
 			if (checkY(touch.pageY)) {
+				var pos = ((obm.parentElement.parentElement.getBoundingClientRect().bottom +  obm.parentElement.parentElement.getBoundingClientRect().top) / 2 - touch.pageY) * 2.4;
+				if (pos > 255.0) { pos = 255.0; }
+				if (pos < -255.0) { pos = -255.0; }
+				car.servoL = pos; 
+				console.log(car.servoL); 
 				// Place element where the finger is
-				obm.style.top = (touch.pageY - document.getElementById("slidersleft").getBoundingClientRect().top - 10) + 'px';
+				obm.style.top = (touch.pageY - obm.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
+			if(!timer) timer = setInterval(sendToServer, 300); 
 		}
 	}, false);
 	var obn = document.getElementById("slider2");
@@ -318,9 +336,15 @@ function wireTouch() {
 		if (event.targetTouches.length == 1) {
 			var touch = event.targetTouches[0];
 			if (checkY(touch.pageY)) {
+				var pos = ((obn.parentElement.parentElement.getBoundingClientRect().bottom +  obn.parentElement.parentElement.getBoundingClientRect().top) / 2 - touch.pageY) * 2.4;
+				if (pos > 255.0) { pos = 255.0; }
+				if (pos < -255.0) { pos = -255.0; }
+				car.servoR = pos; 
+				console.log(car.servoR); 
 				// Place element where the finger is
-				obn.style.top = (touch.pageY - document.getElementById("slidersleft").getBoundingClientRect().top - 10) + 'px';
+				obn.style.top = (touch.pageY - obn.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
+			if(!timer) timer = setInterval(sendToServer, 300); 
 		}
 	}, false);
 	var obo = document.getElementById("sliderm2");
@@ -329,9 +353,16 @@ function wireTouch() {
 		if (event.targetTouches.length == 1) {
 			var touch = event.targetTouches[0];
 			if (checkY(touch.pageY)) {
+				var pos = ((obo.parentElement.parentElement.getBoundingClientRect().bottom +  obo.parentElement.parentElement.getBoundingClientRect().top) / 2 - touch.pageY) * 2.4;
+				if (pos > 30.0) { pos = 255.0; }
+				if (pos < -30.0) { pos = -255.0; }
+				if (pos < 30.0 && pos > -30.0) { pos = 0.0; }
+				car.motor2 = pos; 
+				console.log(car.motor2); 
 				// Place element where the finger is
-				obo.style.top = (touch.pageY - document.getElementById("slidersleft").getBoundingClientRect().top - 10) + 'px';
+				obo.style.top = (touch.pageY - obo.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
+			if(!timer) timer = setInterval(sendToServer, 300); 
 		}
 	}, false);
 	var obp = document.getElementById("sliderm4");
@@ -340,9 +371,15 @@ function wireTouch() {
 		if (event.targetTouches.length == 1) {
 			var touch = event.targetTouches[0];
 			if (checkY(touch.pageY)) {
+				var pos = ((obp.parentElement.parentElement.getBoundingClientRect().bottom +  obp.parentElement.parentElement.getBoundingClientRect().top) / 2 - touch.pageY) * 2.4;
+				if (pos > 255.0) { pos = 255.0; }
+				if (pos < -255.0) { pos = -255.0; }
+				car.motor4 = pos; 
+				console.log(car.motor4); 
 				// Place element where the finger is
-				obp.style.top = (touch.pageY - document.getElementById("slidersleft").getBoundingClientRect().top - 10) + 'px';
+				obp.style.top = (touch.pageY - obp.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
+			if(!timer) timer = setInterval(sendToServer, 300); 
 		}
 	}, false);
 	var obq = document.getElementById("sliders1");
@@ -351,9 +388,15 @@ function wireTouch() {
 		if (event.targetTouches.length == 1) {
 			var touch = event.targetTouches[0];
 			if (checkY(touch.pageY)) {
+				var pos = (obp.parentElement.parentElement.getBoundingClientRect().bottom - touch.pageY) * 1.2 - 25.0;
+				if (pos > 255.0) { pos = 255.0; }
+				if (pos < 0.0) { pos = 0.0; }
+				car.switch1 = pos; 
+				console.log(car.switch1); 
 				// Place element where the finger is
-				obq.style.top = (touch.pageY - document.getElementById("slidersleft").getBoundingClientRect().top - 10) + 'px';
+				obq.style.top = (touch.pageY - obq.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
+			if(!timer) timer = setInterval(sendToServer, 300); 
 		}
 	}, false);
 	var obr = document.getElementById("sliderm1");
@@ -362,9 +405,15 @@ function wireTouch() {
 		if (event.targetTouches.length == 1) {
 			var touch = event.targetTouches[0];
 			if (checkY(touch.pageY)) {
+				var pos = ((obr.parentElement.parentElement.getBoundingClientRect().bottom +  obr.parentElement.parentElement.getBoundingClientRect().top) / 2 - touch.pageY) * 2.4;
+				if (pos > 255.0) { pos = 255.0; }
+				if (pos < -255.0) { pos = -255.0; }
+				car.motorL = pos; 
+				console.log(car.motorL); 
 				// Place element where the finger is
-				obr.style.top = (touch.pageY - document.getElementById("slidersright").getBoundingClientRect().top - 10) + 'px';
+				obr.style.top = (touch.pageY - obr.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
+			if(!timer) timer = setInterval(sendToServer, 300); 
 		}
 	}, false);
 	var obs = document.getElementById("sliderm3");
@@ -373,9 +422,15 @@ function wireTouch() {
 		if (event.targetTouches.length == 1) {
 			var touch = event.targetTouches[0];
 			if (checkY(touch.pageY)) {
+				var pos = ((obs.parentElement.parentElement.getBoundingClientRect().bottom +  obs.parentElement.parentElement.getBoundingClientRect().top) / 2 - touch.pageY) * 2.4;
+				if (pos > 255.0) { pos = 255.0; }
+				if (pos < -255.0) { pos = -255.0; }
+				car.motorR = pos; 
+				console.log(car.motorR); 
 				// Place element where the finger is
-				obs.style.top = (touch.pageY - document.getElementById("slidersright").getBoundingClientRect().top - 10) + 'px';
+				obs.style.top = (touch.pageY - obs.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
+			if(!timer) timer = setInterval(sendToServer, 300); 
 		}
 	}, false);
 	
@@ -390,39 +445,48 @@ function wireTouch() {
 		obh.style.top = (boxcy - 42) + 'px';
 		car.speed = 0.0
 		car.dir = 0.0;
-		car.motorL = 0.0;
-		car.motorR = 0.0;
+		if (document.getElementById("showjoym1m3").checked) {
+			car.motorL = 0.0;
+			car.motorR = 0.0;
+		} else {
+			car.motorL = 0.0;
+			car.servoL = 0.0; 
+		}
 	}, false); 
 	
 	var mstop2 = document.getElementById("sliderm2").nextSibling; 
 	mstop2.addEventListener("click", function(event) {
 		document.getElementById("sliderm2").style.top = (mstop2.getBoundingClientRect().top - document.getElementById("slidersleft").getBoundingClientRect().top) + "px";
+		car.motor2 = 0.0; 
 	}, false); 
 	
 	var mstop4 = document.getElementById("sliderm4").nextSibling; 
 	mstop4.addEventListener("click", function(event) {
 		document.getElementById("sliderm4").style.top = (mstop4.getBoundingClientRect().top - document.getElementById("slidersleft").getBoundingClientRect().top) + "px";
+		car.motor4 = 0.0; 
 	}, false); 
 	
 	var mstop1 = document.getElementById("sliderm1").nextSibling; 
 	mstop1.addEventListener("click", function(event) {
 		document.getElementById("sliderm1").style.top = (mstop1.getBoundingClientRect().top - document.getElementById("slidersleft").getBoundingClientRect().top) + "px";
+		car.motorL = 0.0;
 	}, false); 
 	
 	var mstop3 = document.getElementById("sliderm3").nextSibling; 
 	mstop3.addEventListener("click", function(event) {
 		document.getElementById("sliderm3").style.top = (mstop3.getBoundingClientRect().top - document.getElementById("slidersleft").getBoundingClientRect().top) + "px";
+		car.motorR = 0.0; 
 	}, false); 
 	
 	var sstop = document.getElementsByClassName('switchstop')[0];
 	sstop.addEventListener("click", function(event) {
 		document.getElementById("sliders1").style.top = (sstop.getBoundingClientRect().top - document.getElementById("slidersleft").getBoundingClientRect().top) + "px";
+		car.switch1 = 0.0;
 	}, false); 
 	
 	// make non default elements invisible
-	var nondef = [ "sliderm2", "sliderm4", "sliderm4r", "sliderm3l", "sliders1" ];
+	var nondef = [ "sliderm2", "sliderm4", "sliderm3l", "sliders1" ];
 	for (var l=0; l<nondef.length; l++) {
-		console.log(nondef[l]);
 		document.getElementById(nondef[l]).parentElement.style.display = "none"; 
 	}
 	
@@ -432,6 +496,13 @@ function wireTouch() {
 	var iconsettings = document.getElementById('iconsettings');
 	iconsettings.addEventListener("click", function(event) {
 		var settings = document.getElementById('settings');
+		car.dir = 0.0;
+		car.speed = 0.0;
+		car.motorL = 0.0;
+		car.motorR = 0.0;
+		car.motor2 = 0.0;
+		car.motor4 = 0.0; 
+		car.switch1 = 0.0; 
 		settings.style.display = "block";
 	}, false); 
 	var close = document.getElementById('close');
@@ -474,8 +545,8 @@ function checkInside(x, y) {
 }
 
 function checkY(y) {
-	var box = document.getElementById('slider1bg').getBoundingClientRect();
-	console.log(y);
+	var box = document.getElementById('slider2bg').getBoundingClientRect();
+	// console.log(y);
 	if (y > box.bottom || y < box.top) {
 		return false;
 	} else {
@@ -546,7 +617,10 @@ function sendToServer(){
 			}
 		};
 		// url = /M/motorL/motorR
-		var url = "/car/"+Math.round(car.motorL)+"/"+Math.round(car.motorR);
+		var url = "/car/"+Math.round(car.motorL)+"/"+Math.round(car.motorR) + "/" + 
+			Math.round(car.servoL) + "/" + Math.round(car.servoR) + "/" +
+			Math.round(car.motor2)+"/"+Math.round(car.motor4) + "/" +
+			Math.round(car.switchMode)+"/"+Math.round(car.switch1); 
 		xmlHttp.open("GET", url, true);
 		xmlHttp.send(null);
 	}
@@ -558,7 +632,34 @@ function showjoystick() {
 	for (var i=0; i<elements.length; i++) {
 		document.getElementById(elements[i]).style.display = "block";
 	}
+	if (document.getElementById("showsliderservo1").checked) {
+		document.getElementById("slider1").parentElement.style.display = "block";
+	}
+	if (document.getElementById("showsliderservo2").checked) {
+		document.getElementById("slider2").parentElement.style.display = "block";
+	}
+	document.getElementById("sliderm3").parentElement.style.display = "none";
 	document.getElementById("slidersright").style.display = "none";
+	document.getElementById("slidersright").appendChild(document.getElementById("sliderm3").parentElement);
+	document.getElementById("slidersleft").appendChild(document.getElementById("sliderm4").parentElement);
+	return false;
+}
+
+function showjoystickcar() {
+	var elements = [ "fgcontainer", "fgcontainerred", "bgcontainer" ];
+	for (var i=0; i<elements.length; i++) {
+		document.getElementById(elements[i]).style.display = "block";
+	}
+	if (document.getElementById("showsliderservo2").checked) {
+		document.getElementById("slider2").parentElement.style.display = "block";
+	}
+	if (document.getElementById("showsliderm3").checked) {
+		document.getElementById("sliderm3").parentElement.style.display = "block";
+	}
+	document.getElementById("slider1").parentElement.style.display = "none";
+	document.getElementById("slidersleft").appendChild(document.getElementById("sliderm3").parentElement);
+	document.getElementById("slidersright").style.display = "none";
+	document.getElementById("slidersleft").appendChild(document.getElementById("sliderm4").parentElement);
 	return false;
 }
 
@@ -567,7 +668,18 @@ function showsliders() {
 	for (var i=0; i<elements.length; i++) {
 		document.getElementById(elements[i]).style.display = "none";
 	}
+	if (document.getElementById("showsliderservo2").checked) {
+		document.getElementById("slider2").parentElement.style.display = "block";
+	}
+	if (document.getElementById("showsliderservo1").checked) {
+		document.getElementById("slider1").parentElement.style.display = "block";
+	}
+	if (document.getElementById("showsliderm3").checked) {
+		document.getElementById("sliderm3").parentElement.style.display = "block";
+	}
 	document.getElementById("slidersright").style.display = "block";
+	document.getElementById("slidersright").appendChild(document.getElementById("sliderm3").parentElement);
+	document.getElementById("slidersright").insertBefore(document.getElementById("sliderm4").parentElement, document.getElementById("sliderm1").parentElement); 
 	return false;
 }
 
@@ -590,7 +702,16 @@ function toggleslider3(c) {
 }
 
 function toggleslider4(c) {
-	var box = document.getElementById("sliderm4");
+	document.getElementById("sliderm4").parentElement.style.display = "block"; 
+	if (document.getElementById("showonlysliders").checked) {
+		document.getElementById("slidersright").insertBefore(document.getElementById("sliderm4").parentElement, document.getElementById("sliderm1").parentElement); 
+	} else {
+		document.getElementById("slidersleft").appendChild(document.getElementById("sliderm4").parentElement);
+	}
+}
+
+function togglesliderswitch(c) {
+	var box = document.getElementById("sliders1");
 	if (c.checked) {
 		box.parentElement.style.display = "block";
 	} else {
@@ -598,8 +719,17 @@ function toggleslider4(c) {
 	}
 }
 
-function togglesliderswitch(c) {
-	var box = document.getElementById("sliders1");
+function togglesliderservo1(c) {
+	var box = document.getElementById("slider1");
+	if (c.checked && (document.getElementById("showjoym1m3").checked || document.getElementById("showonlysliders").checked) ) {
+		box.parentElement.style.display = "block";
+	} else {
+		box.parentElement.style.display = "none";
+	}
+}
+
+function togglesliderservo2(c) {
+	var box = document.getElementById("slider2");
 	if (c.checked) {
 		box.parentElement.style.display = "block";
 	} else {
@@ -646,14 +776,14 @@ function togglesliderswitch(c) {
 				<fieldset>
 					<legend>User interface</legend>
 					<input type="radio" name="joystick" checked id='showjoym1m3' onClick="showjoystick();">Show joystick (M1 and M3)</input><br />
-					<input type="radio" name="joystick" id='showjoym1s1' onClick="showjoystick();">Show joystick (M1 and servo 1)</input><br />
+					<input type="radio" name="joystick" id='showjoym1s1' onClick="showjoystickcar();">Show joystick (M1 and servo 1)</input><br />
 					<input type="radio" name="joystick" id='showonlysliders' onClick="showsliders();">Show two sliders</input><br />
-					<input type="checkbox" disabled onClick="toggleslider3(this);">Show slider M3</input><br />
-					<input type="checkbox" onClick="toggleslider4(this);">Show slider M4</input><br />
-					<input type="checkbox" onClick="toggleslider2(this);">Show slider M2 (no PWM!)</input><br />
+					<input type="checkbox" onClick="toggleslider3(this);" id="showsliderm3" checked>Show slider M3</input><br />
+					<input type="checkbox" onClick="toggleslider4(this);" id="showsliderm4">Show slider M4</input><br />
+					<input type="checkbox" onClick="toggleslider2(this);" id="showsliderm2">Show slider M2 (no PWM!)</input><br />
 					<input type="checkbox" onClick="togglesliderswitch(this);">Show slider S1</input><br />
-					<input type="checkbox" onClick="togglesliderservo1(this);" checked>Show slider servo 1</input><br />
-					<input type="checkbox" onClick="togglesliderservo2(this);" checked>Show slider servo 2</input>
+					<input type="checkbox" onClick="togglesliderservo1(this);" checked id="showsliderservo1">Show slider servo 1</input><br />
+					<input type="checkbox" onClick="togglesliderservo2(this);" checked id="showsliderservo2" disabled>Show slider servo 2</input>
 				</fieldset>
 				</div>
 				<div class="groupfields">
@@ -719,10 +849,6 @@ function togglesliderswitch(c) {
 		</div>
 	</div>
 	<div id="slidersright">
-		<div class="sliderbox">
-			<div id="sliderm4rbg"></div>
-			<div id="sliderm4r">Motor 4</div><div class="motorstop">STOP</div>
-		</div>
 		<div class="sliderbox">
 			<div id="sliderm1bg"></div>
 			<div id="sliderm1">Motor 1</div><div class="motorstop">STOP</div>
