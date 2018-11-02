@@ -143,12 +143,14 @@ body {
 		display: none; 
 	}
 
-	#slider1, #slider2, #sliderm2, #sliderm4, #sliderm4r, #sliderm1, #sliderm3, #sliders1 {
+	#slider1, #slider2, #sliderm2, #sliderm4, #sliderm1, #sliderm3, #sliders1 {
 		position: absolute;
 		bottom: 116px;
 		left: 2px;
 		height: 20px;
 		width: 78px;
+		max-width: 78px;
+		overflow: hidden; 
 		z-index: 15; 
 		text-align: center;
 		font-size: 16px;
@@ -184,7 +186,7 @@ body {
 		font-weight: bold; 
 		border-width: 1px;
 		border-style: solid;
-		border-color: red;
+		border-color: black;
 		background-color: red;
 		color: white;
 		display: block; 
@@ -297,6 +299,14 @@ var car = {
 	switchMode: 0,
 	switch1: 0
 };
+var invert = {
+	motorR: 1.0, 
+	motorL: 1.0, 
+	servoL: 1.0,
+	servoR: 1.0,
+	motor2: 1.0,
+	motor4: 1.0
+}
 var readBack = {};
 
 function wireTouch() {
@@ -323,7 +333,7 @@ function wireTouch() {
 				if (pos > 255.0) { pos = 255.0; }
 				if (pos < -255.0) { pos = -255.0; }
 				car.servoL = pos; 
-				console.log(car.servoL); 
+				// console.log(car.servoL); 
 				// Place element where the finger is
 				obm.style.top = (touch.pageY - obm.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
@@ -340,7 +350,7 @@ function wireTouch() {
 				if (pos > 255.0) { pos = 255.0; }
 				if (pos < -255.0) { pos = -255.0; }
 				car.servoR = pos; 
-				console.log(car.servoR); 
+				// console.log(car.servoR); 
 				// Place element where the finger is
 				obn.style.top = (touch.pageY - obn.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
@@ -358,7 +368,7 @@ function wireTouch() {
 				if (pos < -30.0) { pos = -255.0; }
 				if (pos < 30.0 && pos > -30.0) { pos = 0.0; }
 				car.motor2 = pos; 
-				console.log(car.motor2); 
+				// console.log(car.motor2); 
 				// Place element where the finger is
 				obo.style.top = (touch.pageY - obo.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
@@ -375,7 +385,7 @@ function wireTouch() {
 				if (pos > 255.0) { pos = 255.0; }
 				if (pos < -255.0) { pos = -255.0; }
 				car.motor4 = pos; 
-				console.log(car.motor4); 
+				// console.log(car.motor4); 
 				// Place element where the finger is
 				obp.style.top = (touch.pageY - obp.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
@@ -392,7 +402,7 @@ function wireTouch() {
 				if (pos > 255.0) { pos = 255.0; }
 				if (pos < 0.0) { pos = 0.0; }
 				car.switch1 = pos; 
-				console.log(car.switch1); 
+				// console.log(car.switch1); 
 				// Place element where the finger is
 				obq.style.top = (touch.pageY - obq.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
@@ -409,7 +419,7 @@ function wireTouch() {
 				if (pos > 255.0) { pos = 255.0; }
 				if (pos < -255.0) { pos = -255.0; }
 				car.motorL = pos; 
-				console.log(car.motorL); 
+				// console.log(car.motorL); 
 				// Place element where the finger is
 				obr.style.top = (touch.pageY - obr.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
@@ -426,7 +436,7 @@ function wireTouch() {
 				if (pos > 255.0) { pos = 255.0; }
 				if (pos < -255.0) { pos = -255.0; }
 				car.motorR = pos; 
-				console.log(car.motorR); 
+				// console.log(car.motorR); 
 				// Place element where the finger is
 				obs.style.top = (touch.pageY - obs.parentElement.parentElement.getBoundingClientRect().top - 10) + 'px';
 			}
@@ -521,25 +531,47 @@ function checkInside(x, y) {
 	var boxcx = ( box.right + box.left) / 2;
 	var boxcy = ( box.top + box.bottom) / 2;
 	var rad = Math.sqrt( Math.pow( boxcx - x, 2) + Math.pow( boxcy - y, 2));
+	var motorL = 0.0;
+	var motorR = 0.0;
+	var servoL = 0.0;
 	console.log("X: " + (x - boxcx) + ", Y: " + (boxcy - y) + ", Radius: " + rad); 
 	// console.log(box.top, box.right, box.bottom, box.left);
 	if (rad > 95) {
 		return false;
 	} else {
-		// calc motor value
-		var motorL = -255.0 * 1.41 * car.speed * Math.cos(car.dir - Math.PI/4); // -45 degree
-		var motorR = -255.0 * 1.41 * car.speed * Math.sin(car.dir - Math.PI/4);
-
-		// limit to +/-255
-		if     (motorL >  255) { motorL =  255; }
-		else if(motorL < -255) { motorL = -255; }
-		if     (motorR >  255) { motorR =  255; }
-		else if(motorR < -255) { motorR = -255; }
-	
-		car.motorR = motorR;
-		car.motorL = motorL; 
 		car.speed = rad / 85.0
 		car.dir = Math.atan2( y - boxcy, boxcx - x);
+		console.log(car.dir - Math.PI/2); 
+		if (document.getElementById("showjoym1m3").checked) {
+			// calc motor value
+			motorL = -255.0 * 1.41 * car.speed * Math.cos(car.dir - Math.PI/4); // -45 degree
+			motorR = -255.0 * 1.41 * car.speed * Math.sin(car.dir - Math.PI/4);
+
+			// limit to +/-255
+			if     (motorL >  255) { motorL =  255; }
+			else if(motorL < -255) { motorL = -255; }
+			if     (motorR >  255) { motorR =  255; }
+			else if(motorR < -255) { motorR = -255; }
+	
+			car.motorR = motorR;
+			car.motorL = motorL; 
+		} else {
+			motorL = 255.0 * rad / 80.0;
+			if (motorL > 255.0) { motorL = 255.0; }
+			if ( boxcy - y > 0) {
+				car.motorL = motorL;
+				servoL = (car.dir + Math.PI/2) * 255.0 / 1.25;
+				if (servoL > 255.0) { servoL = 255.0; }
+				else if (servoL < -255.0) { servoL = -255.0; }
+				car.servoL = servoL;
+			} else {
+				car.motorL = -motorL;
+				servoL = -(car.dir - Math.PI/2) * 255.0 / 1.25;
+				if (servoL > 255.0) { servoL = 255.0; }
+				else if (servoL < -255.0) { servoL = -255.0; }
+				car.servoL = servoL;
+			}
+		}
 		return true;
 	}
 }
@@ -603,8 +635,6 @@ function drawRedStop() {
 }
 
 function sendToServer(){
-	
-	
 	var json;
 	var now = new Date().getTime();
 	if(((now-lastSendTime) > transmitInterval) || (car.speed == 0)) {
@@ -617,9 +647,9 @@ function sendToServer(){
 			}
 		};
 		// url = /M/motorL/motorR
-		var url = "/car/"+Math.round(car.motorL)+"/"+Math.round(car.motorR) + "/" + 
-			Math.round(car.servoL) + "/" + Math.round(car.servoR) + "/" +
-			Math.round(car.motor2)+"/"+Math.round(car.motor4) + "/" +
+		var url = "/car/"+Math.round(car.motorL * invert.motorL)+"/"+Math.round(car.motorR * invert.motorR) + "/" + 
+			Math.round(car.servoL * invert.servoL) + "/" + Math.round(car.servoR * invert.servoR) + "/" +
+			Math.round(car.motor2 * invert.motor2)+"/"+Math.round(car.motor4 * invert.motor4) + "/" +
 			Math.round(car.switchMode)+"/"+Math.round(car.switch1); 
 		xmlHttp.open("GET", url, true);
 		xmlHttp.send(null);
@@ -737,6 +767,54 @@ function togglesliderservo2(c) {
 	}
 }
 
+function toggleinvert(c) {
+	if (c.getAttribute("id") == "invertml") {
+		if (c.checked) {
+			invert.motorL = -1.0;
+		} else {
+			invert.motorL = 1.0;
+		}
+	}
+	if (c.getAttribute("id") == "invertmr") {
+		if (c.checked) {
+			invert.motorR = -1.0;
+		} else {
+			invert.motorR = 1.0;
+		}
+	}
+	if (c.getAttribute("id") == "invertm2") {
+		if (c.checked) {
+			invert.motor2 = -1.0;
+		} else {
+			invert.motor2 = 1.0;
+		}
+	}
+	if (c.getAttribute("id") == "invertm4") {
+		if (c.checked) {
+			invert.motor4 = -1.0;
+		} else {
+			invert.motor4 = 1.0;
+		}
+	}
+	if (c.getAttribute("id") == "inverts1") {
+		if (c.checked) {
+			invert.servoL = -1.0;
+		} else {
+			invert.servoL = 1.0;
+		}
+	}
+	if (c.getAttribute("id") == "inverts2") {
+		if (c.checked) {
+			invert.servoR = -1.0;
+		} else {
+			invert.servoR = 1.0;
+		}
+	}
+}
+function updatelabel(c) {
+	console.log(c.value); 
+}
+
 </script>
 </head>
 <body onload="wireTouch();">
@@ -766,12 +844,12 @@ function togglesliderservo2(c) {
 				<div class="groupfields">
 				<fieldset>
 					<legend>Direction of servos and motors</legend>
-					<input type="checkbox">Invert motor M1 (left)</input><br />
-					<input type="checkbox">Invert motor M3 (right)</input><br />
-					<input type="checkbox">Invert motor M4</input><br />
-					<input type="checkbox">Invert motor M2 (no PWM!)</input><br />
-					<input type="checkbox">Invert servo L</input><br />
-					<input type="checkbox">Invert servo R</input>
+					<input type="checkbox" onClick="toggleinvert(this);" id="invertml">Invert motor M1 (left)</input><br />
+					<input type="checkbox" onClick="toggleinvert(this);" id="invertmr">Invert motor M3 (right)</input><br />
+					<input type="checkbox" onClick="toggleinvert(this);" id="invertm4">Invert motor M4</input><br />
+					<input type="checkbox" onClick="toggleinvert(this);" id="invertm2">Invert motor M2 (no PWM!)</input><br />
+					<input type="checkbox" onClick="toggleinvert(this);" id="inverts1">Invert servo L</input><br />
+					<input type="checkbox" onClick="toggleinvert(this);" id="inverts2">Invert servo R</input>
 				</fieldset>
 				<fieldset>
 					<legend>User interface</legend>
@@ -805,13 +883,13 @@ function togglesliderservo2(c) {
 				</fieldset>
 				<fieldset>
 					<legend>Labels for sliders</legend>
-					<input type="text" size="26" value="Servo L"></input><br />
-					<input type="text" size="26" value="Servo R"></input><br />
-					<input type="text" size="26" value="Motor 1"></input><br />
-					<input type="text" size="26" value="Motor 2"></input><br />
-					<input type="text" size="26" value="Motor 3"></input><br />
-					<input type="text" size="26" value="Motor 4"></input><br />
-					<input type="text" size="26" value="Switch 1"></input>
+					<input type="text" size="26" value="Servo L" id="labelservol" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Servo R" id="labelservor" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Motor 1" id="labelmotorl" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Motor 2" id="labelmotor2" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Motor 3" id="labelmotorr" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Motor 4" id="labelmotor4" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Switch 1" id="labelswitch1" onInput="updatelabel(this);"></input>
 				</fieldset>
 				</div>
 			</form>
