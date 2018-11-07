@@ -51,7 +51,7 @@ body {
 	#settings {
 		background-color: whitesmoke;
 		width: 100%;
-		height: 120vh; 
+		height: 120vw; 
 		position: absolute;
 		top: 0;
 		bottom: 0;
@@ -292,8 +292,8 @@ var car = {
 	dir: 0, 
 	motorR: 0, 
 	motorL: 0, 
-	servoL: 0,
-	servoR: 0,
+	servoL: 90,
+	servoR: 90,
 	motor2: 0,
 	motor4: 0,
 	switchMode: 0,
@@ -329,9 +329,9 @@ function wireTouch() {
 		if (event.targetTouches.length == 1) {
 			var touch = event.targetTouches[0];
 			if (checkY(touch.pageY)) {
-				var pos = ((obm.parentElement.parentElement.getBoundingClientRect().bottom +  obm.parentElement.parentElement.getBoundingClientRect().top) / 2 - touch.pageY) * 2.4;
-				if (pos > 255.0) { pos = 255.0; }
-				if (pos < -255.0) { pos = -255.0; }
+				var pos = ((obm.parentElement.parentElement.getBoundingClientRect().bottom +  obm.parentElement.parentElement.getBoundingClientRect().top) / 2 - touch.pageY) * 0.84 + 90.0;
+				if (pos > 180.0) { pos = 180.0; }
+				if (pos < 0.0) { pos = 0.0; }
 				car.servoL = pos; 
 				// console.log(car.servoL); 
 				// Place element where the finger is
@@ -346,9 +346,9 @@ function wireTouch() {
 		if (event.targetTouches.length == 1) {
 			var touch = event.targetTouches[0];
 			if (checkY(touch.pageY)) {
-				var pos = ((obn.parentElement.parentElement.getBoundingClientRect().bottom +  obn.parentElement.parentElement.getBoundingClientRect().top) / 2 - touch.pageY) * 2.4;
-				if (pos > 255.0) { pos = 255.0; }
-				if (pos < -255.0) { pos = -255.0; }
+				var pos = ((obn.parentElement.parentElement.getBoundingClientRect().bottom +  obn.parentElement.parentElement.getBoundingClientRect().top) / 2 - touch.pageY) * 0.84 + 90.0;
+				if (pos > 180.0) { pos = 180.0; }
+				if (pos < 0.0) { pos = 0.0; }
 				car.servoR = pos; 
 				// console.log(car.servoR); 
 				// Place element where the finger is
@@ -647,8 +647,12 @@ function sendToServer(){
 			}
 		};
 		// url = /M/motorL/motorR
+		var servo1 = car.servoL;
+		var servo2 = car.servoR;
+		if (invert.servoL < 0.0) { servo1 = 180.0 - car.servoL; }
+		if (invert.servoR < 0.0) { servo2 = 180.0 - car.servoR; }
 		var url = "/car/"+Math.round(car.motorL * invert.motorL)+"/"+Math.round(car.motorR * invert.motorR) + "/" + 
-			Math.round(car.servoL * invert.servoL) + "/" + Math.round(car.servoR * invert.servoR) + "/" +
+			Math.round(servo1) + "/" + Math.round(servo2) + "/" +
 			Math.round(car.motor2 * invert.motor2)+"/"+Math.round(car.motor4 * invert.motor4) + "/" +
 			Math.round(car.switchMode)+"/"+Math.round(car.switch1); 
 		xmlHttp.open("GET", url, true);

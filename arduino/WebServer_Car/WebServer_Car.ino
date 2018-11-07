@@ -7,16 +7,17 @@
 
 #include <WiFi101.h>
 #include <WiFiMDNSResponder.h>
+#include <Servo.h>
 
 //#define DEBUG 1 // enable debug output
 
-#define M1_INVERT // invert direction of M1/right
-//#define M2_INVERT // invert direction of M2/left
+// #define M1_INVERT // invert direction of M1/right
+#define M3_INVERT // invert direction of M2/left
 
 #define IS_ACCESS_POINT 1 // 0 or 1
 
 #if IS_ACCESS_POINT == 1
-  char ssid[] = "rc-car-ap";   // AP name
+  char ssid[] = "robby4";   // AP name
   char pass[] = "";             // no AP password (open AP)
   //char pass[] = "1234567890";   // AP password
 #else
@@ -24,9 +25,9 @@
   char pass[] = "8831769357215102";  // your network password
 #endif
 
-#define MDNS_SUPPORT // uncomment for MDNS support
+// #define MDNS_SUPPORT // uncomment for MDNS support
 
-char mdnsName[] = "eitech"; // MDNS name "wattuino.local"
+char mdnsName[] = "robby"; // MDNS name "wattuino.local"
 
 //#define WAIT_FOR_SERIAL_CONNECTION
 
@@ -46,18 +47,24 @@ char *httpRequestURL; // HTTP request from client
   WiFiMDNSResponder mdnsResponder; // MDNS responder
 #endif
 
+Servo servoL;
+Servo servoR; 
+
 /*
  * initialize motor port (1...4) and set speed to 0
  */
-void initMotor(uint32_t motorNr)
-{
-  if((motorNr >= 1) && (motorNr <= 4))
-  {
-    motorNr--;
-    pinMode(pinMotor[motorNr][0], OUTPUT);
-    analogWrite(pinMotor[motorNr][0], 0);
-    pinMode(pinMotor[motorNr][1], OUTPUT);
-    analogWrite(pinMotor[motorNr][1], 0);
+void initMotor(uint32_t motorNr) {
+	if((motorNr >= 1) && (motorNr <= 4)) {
+	motorNr--;
+	pinMode(pinMotor[motorNr][0], OUTPUT);
+	pinMode(pinMotor[motorNr][1], OUTPUT);
+	if (motorNr == 1) {
+		digitalWrite(pinMotor[motorNr][0], LOW);
+		digitalWrite(pinMotor[motorNr][1], LOW);
+	} else {
+		analogWrite(pinMotor[motorNr][0], 0);
+		analogWrite(pinMotor[motorNr][1], 0);
+	}
   }
 }
 
@@ -67,51 +74,57 @@ void initMotor(uint32_t motorNr)
  * value:   -255...255
  * breaks:  motor break activated, when true
  */
-void setMotorSpeed(int motorNr, int value, bool breaks = false)
-{
-  int in1, in2;
+void setMotorSpeed(int motorNr, int value, bool breaks = false) {
+	int in1, in2;
+	if((motorNr >= 1) && (motorNr <= 4)) {
+		motorNr--;
+		if(value >= 0) {
+			if(value > 255)
+				value = 255;
+			if(breaks) {
+				in1 = 255;
+				in2 = 255 - value;
+			} else {
+				in1 = value;
+				in2 = 0;
+			}
+		} else  {
+			// value is negative, reverse motor
+			value = -value;
+			if(value > 255)
+				value = 255;
+			if(breaks) {
+				in1 = 255 - value;
+				in2 = 255;
+			} else {
+				in1 = 0;
+				in2 = value;
+			}
+		}
+		if (motorNr == 1) {
+			if (in1 > 50) {
+				digitalWrite(pinMotor[motorNr][0], HIGH);
+			} else {
+				digitalWrite(pinMotor[motorNr][0], LOW);
+			}
+			if (in2 > 50) {
+				digitalWrite(pinMotor[motorNr][1], HIGH);
+			} else {
+				digitalWrite(pinMotor[motorNr][1], LOW);
+			}
+		} else {
+			analogWrite(pinMotor[motorNr][0], in1);
+			analogWrite(pinMotor[motorNr][1], in2);
+		}
+	}
+}
 
-  if((motorNr >= 1) && (motorNr <= 4))
-  {
-    motorNr--;
-
-    if(value >= 0)
-    {
-      if(value > 255)
-        value = 255;
-        
-      if(breaks)
-      {
-        in1 = 255;
-        in2 = 255 - value;
-      }
-      else
-      {
-        in1 = value;
-        in2 = 0;
-      }
-    }
-    else  // value is negative, reverse motor
-    {
-      value = -value;
-      if(value > 255)
-        value = 255;
-
-      if(breaks)
-      {
-        in1 = 255 - value;
-        in2 = 255;
-      }
-      else
-      {
-        in1 = 0;
-        in2 = value;
-      }
-    }
-
-    analogWrite(pinMotor[motorNr][0], in1);
-    analogWrite(pinMotor[motorNr][1], in2);
-  }
+void setServoPos(int snum, int spos) {
+	if (snum == 0) {
+		servoL.write(spos);
+	} else {
+		servoR.write(180 - spos);
+	}
 }
 
 /*
@@ -186,14 +199,18 @@ void printWifiStatus()
 /*
  * setup function, runs once when you press reset or power the board
  */
-void setup() 
-{
-  // init pins
-  initMotor(1);
-  initMotor(2);
-  initMotor(3);
-  initMotor(4);
-  pinMode(RCS1, OUTPUT);
+void setup() {
+	// init pins
+	initMotor(1);
+	initMotor(2);
+	initMotor(3);
+	initMotor(4);
+	pinMode(RCS1, OUTPUT);
+	analogWrite(RCS1, 0);
+	servoL.attach(16);
+	servoR.attach(21);
+	setServoPos(0, 90);
+	setServoPos(1, 90);
 
   // init analog inputs
   analogReadResolution(10); // 10 bit (0...1023)
@@ -282,17 +299,29 @@ void loop()
             {
               int mL = atoi( httpGetResource(1).c_str() );
               int mR = atoi( httpGetResource(2).c_str() );
+	      int m2 = atoi( httpGetResource(5).c_str() );
+              int m4 = atoi( httpGetResource(6).c_str() );
+	      int sL = atoi( httpGetResource(3).c_str() );
+              int sR = atoi( httpGetResource(4).c_str() );
+	      int switch1 = atoi( httpGetResource(8).c_str() );
+	      if (switch1 > 255) { switch1 = 255; }
+	      if (switch1 <0 ) { switch1 = 0; }
+	      analogWrite(RCS1, switch1);
               #ifdef M1_INVERT
                 setMotorSpeed(1, -mR, false);
               #else
                 setMotorSpeed(1, mR, false);
               #endif
-              #ifdef M2_INVERT
+              #ifdef M3_INVERT
                 setMotorSpeed(3, -mL, false);
               #else
                 setMotorSpeed(3, mL, false);
               #endif
-
+	       setMotorSpeed(2, m2, false);
+	      setMotorSpeed(4, m4, false);
+	      setServoPos(0, sL);
+	       setServoPos(1, sR);
+	
               // send reply
               int value = analogRead(PIN_A2);  // A2 is connected to the power supply (VIN)
               reply = "{ \"vbat\": ";
