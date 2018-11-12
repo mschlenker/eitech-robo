@@ -16,6 +16,15 @@ body {
 	display: none; 
 }
 
+#fakebg {
+	display: block;
+	margin: 0px;
+	padding: 0px; 
+	position: relative; 
+	width: 100vw;
+	height: calc(100vh + 80px); 
+}
+
 #rotate {
 	background-color: whitesmoke;
 	height: 100%;
@@ -129,18 +138,20 @@ body {
 	}
 	#slidersleft {
 		position: fixed;
-		bottom: calc(50vh - 126px);
+		bottom: 0;
 		left: 0px;
 		height: 252px;
 		display: block; 
 		width: 450px;
+		z-index: 15;
 	}
 	#slidersright {
 		position: fixed;
-		bottom: calc(50vh - 126px);
+		bottom: 0;
 		right: 0px;
 		height: 252px;
-		display: none; 
+		display: none;
+		z-index: 15;
 	}
 
 	#slider1, #slider2, #sliderm2, #sliderm4, #sliderm1, #sliderm3, #sliders1 {
@@ -309,7 +320,18 @@ var invert = {
 }
 var readBack = {};
 
+window.addEventListener("load",function() {
+	// Set a timeout...
+		setTimeout(function(){
+			// Hide the address bar!
+			wireTouch(); 
+			window.scrollTo(0, 1);
+		}, 0);
+	});
+
 function wireTouch() {
+	// When ready...
+	
 	var obh = document.getElementById("fgcontainer");
 	obh.addEventListener('touchmove', function(event) {
 		// If there's exactly one finger inside this element
@@ -836,7 +858,10 @@ function updatelabel(c) {
 
 </script>
 </head>
-<body onload="wireTouch();">
+<body>
+	<div id="fakebg">
+		Try something... 
+	</div>
 	<div id="rotate">
 		<div id="inner">Please switch to landscape mode!</div>
 	</div>

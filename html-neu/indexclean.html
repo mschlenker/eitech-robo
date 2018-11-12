@@ -1,0 +1,248 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no">
+	<title>Eitech Robby</title>
+	<style>
+* {
+	box-sizing: border-box;
+}
+
+#scrollme, #controlbox, #bottombox {
+	display: none; 
+}
+
+#rotate {
+	display: block; 
+	background-color: whitesmoke;
+	height: 100vh;
+	width: 100vw;
+	position: relative;
+	padding: 0px;
+	font-family: sans-serif;
+	font-weight: bold; 
+	font-size: 16px; 	
+}
+
+#rotate .inner, #scrollme .inner {
+	margin: 0;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	text-align: center; 
+}
+
+/* kleine Tablets, grosse Smartphones */
+
+@media (max-device-width: 1024px) and (orientation: landscape) {
+
+	#rotate {
+		display: none; 
+	}
+
+	#scrollme {
+		display: block;
+		position: relative;
+		top: 0;
+		left: 0;
+		width: calc(100vw - 2px);
+		height: 100vh; 
+		padding: 0px;
+		font-family: sans-serif;
+		font-weight: bold; 
+		font-size: 16px; 
+	}
+
+	#controlbox {
+		display: block; 
+		position: -webkit-sticky;
+		position: sticky;
+		top: -1px;
+		width: calc(100vw - 2px);
+		height: 99vh; 
+	}
+
+	#bottombox {
+		display: block; 
+		position: relative;
+		width: calc(100vw - 2px);
+		height: 220vh; 
+	}
+	
+	#slidersleft, #slidersright {
+		display: block; 
+		position: absolute;
+		height: 99vh;
+	}
+	#slidersleft {
+		position: absolute;
+		left: 0;
+		top: calc(50vh - 125px); 
+	}
+	#slidersright {
+		position: absolute;
+		right: 0;
+		top: calc(50vh - 125px); 
+	}
+	div.sliderbox {
+		position: relative;
+		width: 84px;
+		height: 250px;
+		padding: 0;
+		margin: 0;
+		margin-left: 3px; 
+		margin-right: 3px; 
+		float: left;
+		/* border-style: solid;
+		border-width: 1px;
+		border-color: green; */
+	}
+	.arrowupbox {
+		display: block; 
+		position: absolute;
+		top: 0;
+		left: 0; 
+		z-index: 15; 
+		height: 36px;
+		width: 84px; 
+		touch-action: none;
+	}
+	.arrowdownbox {
+		display: block; 
+		position: absolute;
+		bottom: 0;
+		left: 0; 
+		z-index: 15; 
+		height: 36px;
+		width: 84px; 
+		touch-action: none;
+	}
+	.arrowup, .arrowdown {
+		touch-action: none;
+	}
+	.sliderbg {
+		display: block; 
+		position: absolute;
+		top: 15px;
+		left: 28px; 
+		z-index: 10; 
+		height: 220px;
+		width: 28px;
+		background-color: lightgray; 
+	}
+	.slider {
+		display: block; 
+		position: absolute;
+		top: 115px;
+		left: 0px; 
+		z-index: 13; 
+		height: 20px;
+		width: 84px;
+		background-color: lightgray; 
+		text-align: center; 
+	}
+	
+}
+	</style>
+	<script>
+
+function wireTouch() {
+	var upArrows = document.getElementsByClassName("arrowup");
+	var downArrows = document.getElementsByClassName("arrowdown");
+	for (var i=0; i<upArrows.length; i++) { drawArrowUp(upArrows[i]); }
+	for (var j=0; j<downArrows.length; j++) { drawArrowDown(downArrows[j]); }
+}
+
+function drawArrowUp(canvas) {
+	var context = canvas.getContext("2d");
+	context.beginPath();
+	context.moveTo(2, 32);
+	context.lineTo(82, 32);
+	context.lineTo(42, 2);
+	context.closePath();
+	context.lineWidth = 2;
+	context.strokeStyle = '#666666';
+	context.stroke();
+	context.fillStyle = "lightgray";
+	context.fill();
+}
+
+function drawArrowDown(canvas) {
+	var context = canvas.getContext("2d");
+	context.beginPath();
+	context.moveTo(2, 2);
+	context.lineTo(82, 2);
+	context.lineTo(42, 32);
+	context.closePath();
+	context.lineWidth = 2;
+	context.strokeStyle = '#666666';
+	context.stroke();
+	context.fillStyle = "lightgray";
+	context.fill();
+}
+
+	</script>
+</head>
+<body onLoad="wireTouch();">
+	<div id="rotate">
+		<div class="inner">Please switch to landscape mode!</div>
+	</div>
+	<div id="scrollme">
+		<div class="inner">Scroll up to hide navigation bar!</div>
+	</div>
+	<div id="controlbox">
+		<div id="slidersleft">
+			<div class="sliderbox">
+				<div class="arrowupbox"><canvas class="arrowup" width="84" height="36" /></div>
+				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="36" /></div>
+				<div class="sliderbg"></div>
+				<div class="slider" id="slider1">Servo L</div>
+				
+				<div class="centerservo"></div>
+			</div>
+			<div class="sliderbox">
+				<div class="arrowupbox"><canvas class="arrowup" width="84" height="36" /></div>
+				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="36" /></div>
+				<div class="sliderbg"></div>
+				<div class="slider" id="slider2">Servo R</div>
+
+				<div class="centerservo"></div>
+			</div>
+			<!-- <div class="sliderbox">
+				<div id="sliderm2bg"></div>
+				<div id="sliderm2">Motor 2</div><div class="motorstop">STOP</div>
+			</div> -->
+			<!-- <div class="sliderbox">
+				<div id="sliderm4bg"></div>
+				<div id="sliderm4">Motor 4</div><div class="motorstop">STOP</div>
+			</div>
+			<div class="sliderbox">
+				<div id="sliderm3lbg"></div>
+				<div id="sliderm3l">Motor 3</div><div class="motorstop">STOP</div>
+			</div>
+			<div class="sliderbox">
+				<div id="sliders1bg"></div>
+				<div id="sliders1">Switch 1</div><div class="switchstop">STOP</div>
+			</div> -->
+		</div>
+		<div id="slidersright">
+			<div class="sliderbox">
+				<div class="arrowupbox"><canvas class="arrowup" width="84" height="36" /></div>
+				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="36" /></div>
+				<div class="sliderbg"></div>
+				<div class="slider" id="sliderm1">Motor 1</div>
+			</div>
+			<div class="sliderbox">
+				<div class="arrowupbox"><canvas class="arrowup" width="84" height="36" /></div>
+				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="36" /></div>
+				<div class="sliderbg"></div>
+				<div class="slider" id="sliderm3">Motor 3</div>
+			</div>
+		</div>
+	</div>
+	<div id ="bottombox">
+	</div>
+</body>
+	
