@@ -265,7 +265,7 @@ function getPosUp() {
 					if (sliders.s[j].pos > sliders.s[j].end) sliders.s[j].pos = sliders.s[j].end; 
 					console.log(sliders.s[j].name + " " + sliders.s[j].pos); 
 					sliders.s[j].up = 1;
-					tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos;
+					tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos + " " + sliders.s[j].center;
 				}
 				if(!upTimer) upTimer = setInterval(countUp, 100); 
 			}
@@ -288,7 +288,7 @@ function getPosDown() {
 		var dwn = sliderboxes[i].getElementsByClassName("arrowdownbox")[0]; 
 		dwn.addEventListener('touchstart', function(e) { 
 			e.preventDefault();
-			console.log(this); 
+			// console.log(this); 
 			var id = this.parentElement.getElementsByClassName("slider")[0].getAttribute("id");
 			var tbox = this.parentElement.getElementsByClassName("slider")[0]; 
 			console.log(id); 
@@ -298,7 +298,7 @@ function getPosDown() {
 					if (sliders.s[j].pos < sliders.s[j].start) sliders.s[j].pos = sliders.s[j].start; 
 					console.log(sliders.s[j].name + " " + sliders.s[j].pos);
 					sliders.s[j].down = 1;
-					tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos;
+					tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos + " " + sliders.s[j].center ;
 				}
 			}
 			if(!upTimer) upTimer = setInterval(countUp, 100); 
@@ -318,8 +318,10 @@ function getPosDown() {
 function wireCenter() {
 	var sliderboxes = document.getElementsByClassName("slider");
 	for (var i=0; i<sliderboxes.length; i++) {
-		if (sliders.s[j].name === this.getAttribute("id")) {
-			
+		for (var j=0; j<sliders.s.length; j++) {
+			if (sliders.s[j].name === sliderboxes[i].getAttribute("id")) {
+				console.log(sliders.s[j].name); 
+			}	
 		}
 	}
 }
@@ -344,13 +346,13 @@ function countUp() {
 			var tbox = document.getElementById(sliders.s[j].name);
 			sliders.s[j].pos += sliders.s[j].step;
 			if (sliders.s[j].pos > sliders.s[j].end) { sliders.s[j].pos = sliders.s[j].end; }
-			tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos;
+			tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos + " " + sliders.s[j].center;
 		}
 		if (sliders.s[j].down > 0) {
 			var tbox = document.getElementById(sliders.s[j].name);
 			sliders.s[j].pos -= sliders.s[j].step;
 			if (sliders.s[j].pos < sliders.s[j].start) { sliders.s[j].pos = sliders.s[j].start; }
-			tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos;
+			tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos + " " + sliders.s[j].center;
 		}
 	}
 	
