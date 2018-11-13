@@ -9,6 +9,11 @@
 	box-sizing: border-box;
 }
 
+body {
+	-webkit-user-select: none !important;
+	user-select: none !important;
+}
+
 #scrollme, #controlbox, #bottombox {
 	display: none; 
 }
@@ -60,7 +65,7 @@
 		position: -webkit-sticky;
 		position: sticky;
 		top: -1px;
-		width: calc(100vw - 2px);
+		width: calc(100vw - 6px);
 		height: 99vh; 
 	}
 
@@ -87,6 +92,8 @@
 		top: calc(50vh - 125px); 
 	}
 	div.sliderbox {
+		-webkit-user-select: none !important;
+		user-select: none !important;
 		position: relative;
 		width: 84px;
 		height: 250px;
@@ -104,24 +111,28 @@
 		position: absolute;
 		top: 0;
 		left: 0; 
-		z-index: 15; 
-		height: 36px;
+		z-index: 15;
+		height: 80px;
 		width: 84px; 
-		touch-action: none;
+		/* touch-action: none; */
+		-webkit-user-select: none !important;
+		user-select: none !important;
 	}
 	.arrowdownbox {
 		display: block; 
 		position: absolute;
 		bottom: 0;
 		left: 0; 
-		z-index: 15; 
-		height: 36px;
+		z-index: 16;
+		height: 80px;
 		width: 84px; 
-		touch-action: none;
+		/* touch-action: none; */
+		-webkit-user-select: none !important;
+		user-select: none !important;
 	}
-	.arrowup, .arrowdown {
+	/* .arrowup, .arrowdown {
 		touch-action: none;
-	}
+	} */ 
 	.sliderbg {
 		display: block; 
 		position: absolute;
@@ -135,32 +146,87 @@
 	.slider {
 		display: block; 
 		position: absolute;
-		top: 115px;
+		top: 85px;
 		left: 0px; 
 		z-index: 13; 
-		height: 20px;
+		height: 80px;
 		width: 84px;
-		background-color: lightgray; 
 		text-align: center; 
 	}
 	
 }
 	</style>
 	<script>
+	
+var upTimer = null; 
+	
+var sliders = {
+	s : [
+		{ 	name : "sliders1",
+			text : "Servo L",
+			type: "servo",
+			start : 0,
+			end: 180,
+			pos : 90,
+			step : 15,
+			up : 0,
+			down : 0,
+			center : "Neutral",
+			cc : "black" },
+		{ 	name : "sliders2",
+			text : "Servo R",
+			type: "servo",
+			start : 0,
+			end: 180,
+			pos : 90,
+			step : 15,
+			up : 0,
+			down : 0,
+			center : "Neutral",
+			cc : "black" },
+		{ 	name : "sliderm1",
+			text : "Motor 1",
+			type: "motor",
+			start : -255,
+			end: 255,
+			pos : 0,
+			step : 16,
+			up : 0,
+			down : 0,
+			center : "STOP",
+			cc : "red" },
+		{ 	name : "sliderm3",
+			text : "Motor 3",
+			type: "motor",
+			start : -255,
+			end: 255,
+			pos : 0,
+			step : 16,
+			up : 0,
+			down : 0,
+			center : "STOP",
+			cc : "red" }
+	]
+};
 
 function wireTouch() {
 	var upArrows = document.getElementsByClassName("arrowup");
 	var downArrows = document.getElementsByClassName("arrowdown");
 	for (var i=0; i<upArrows.length; i++) { drawArrowUp(upArrows[i]); }
 	for (var j=0; j<downArrows.length; j++) { drawArrowDown(downArrows[j]); }
+	getPosUp();
+	getPosDown();
+	wireCenter();
 }
 
 function drawArrowUp(canvas) {
 	var context = canvas.getContext("2d");
 	context.beginPath();
-	context.moveTo(2, 32);
+	context.moveTo(2, 76);
+	context.lineTo(82, 76);
 	context.lineTo(82, 32);
 	context.lineTo(42, 2);
+	context.lineTo(2, 32);
 	context.closePath();
 	context.lineWidth = 2;
 	context.strokeStyle = '#666666';
@@ -174,7 +240,9 @@ function drawArrowDown(canvas) {
 	context.beginPath();
 	context.moveTo(2, 2);
 	context.lineTo(82, 2);
-	context.lineTo(42, 32);
+	context.lineTo(82, 52);
+	context.lineTo(42, 76);
+	context.lineTo(2, 52);
 	context.closePath();
 	context.lineWidth = 2;
 	context.strokeStyle = '#666666';
@@ -182,6 +250,112 @@ function drawArrowDown(canvas) {
 	context.fillStyle = "lightgray";
 	context.fill();
 }
+
+function getPosUp() {
+	var sliderboxes = document.getElementsByClassName("sliderbox");
+	for (var i=0; i<sliderboxes.length; i++) {
+		var up = sliderboxes[i].getElementsByClassName("arrowupbox")[0]; 
+		up.addEventListener('touchstart', function(e) { 
+			e.preventDefault();
+			var id = this.parentElement.getElementsByClassName("slider")[0].getAttribute("id");
+			var tbox = this.parentElement.getElementsByClassName("slider")[0]; 
+			for (var j=0; j<sliders.s.length; j++) {
+				if (sliders.s[j].name === id) {
+					sliders.s[j].pos = sliders.s[j].pos + sliders.s[j].step;
+					if (sliders.s[j].pos > sliders.s[j].end) sliders.s[j].pos = sliders.s[j].end; 
+					console.log(sliders.s[j].name + " " + sliders.s[j].pos); 
+					sliders.s[j].up = 1;
+					tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos;
+				}
+				if(!upTimer) upTimer = setInterval(countUp, 100); 
+			}
+		}, false);
+		up.addEventListener('touchend', function(e) { 
+			e.preventDefault();
+			var id = this.parentElement.getElementsByClassName("slider")[0].getAttribute("id");
+			for (var j=0; j<sliders.s.length; j++) {
+				if (sliders.s[j].name === id) {
+					sliders.s[j].up = 0;
+				}
+			}
+		}, false); 
+	}
+}
+
+function getPosDown() {
+	var sliderboxes = document.getElementsByClassName("sliderbox");
+	for (var i=0; i<sliderboxes.length; i++) {
+		var dwn = sliderboxes[i].getElementsByClassName("arrowdownbox")[0]; 
+		dwn.addEventListener('touchstart', function(e) { 
+			e.preventDefault();
+			console.log(this); 
+			var id = this.parentElement.getElementsByClassName("slider")[0].getAttribute("id");
+			var tbox = this.parentElement.getElementsByClassName("slider")[0]; 
+			console.log(id); 
+			for (var j=0; j<sliders.s.length; j++) {
+				if (sliders.s[j].name === id) {
+					sliders.s[j].pos = sliders.s[j].pos - sliders.s[j].step;
+					if (sliders.s[j].pos < sliders.s[j].start) sliders.s[j].pos = sliders.s[j].start; 
+					console.log(sliders.s[j].name + " " + sliders.s[j].pos);
+					sliders.s[j].down = 1;
+					tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos;
+				}
+			}
+			if(!upTimer) upTimer = setInterval(countUp, 100); 
+		}, false);
+		dwn.addEventListener('touchend', function(e) { 
+			e.preventDefault();
+			var id = this.parentElement.getElementsByClassName("slider")[0].getAttribute("id");
+			for (var j=0; j<sliders.s.length; j++) {
+				if (sliders.s[j].name === id) {
+					sliders.s[j].down = 0;
+				}
+			}
+		}, false); 
+	}
+}
+
+function wireCenter() {
+	var sliderboxes = document.getElementsByClassName("slider");
+	for (var i=0; i<sliderboxes.length; i++) {
+		if (sliders.s[j].name === this.getAttribute("id")) {
+			
+		}
+	}
+}
+
+/* function clickUp(up) {
+	var id = this.parentElement.getElementsByClassName("slider")[0].getAttribute("id");
+		// console.log(sliders.s.length); 
+		for (var j=0; j<sliders.s.length; j++) {
+			// console.log(sliders.s[j]["name"]); 
+			// console.log(id); 
+			if (sliders.s[j].name === id) {
+				console.log(sliders.s[j].name); 
+			}
+		}
+		// console.log(id);
+	return false; 
+} */
+
+function countUp() {
+	for (var j=0; j<sliders.s.length; j++) {
+		if (sliders.s[j].up > 0) {
+			var tbox = document.getElementById(sliders.s[j].name);
+			sliders.s[j].pos += sliders.s[j].step;
+			if (sliders.s[j].pos > sliders.s[j].end) { sliders.s[j].pos = sliders.s[j].end; }
+			tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos;
+		}
+		if (sliders.s[j].down > 0) {
+			var tbox = document.getElementById(sliders.s[j].name);
+			sliders.s[j].pos -= sliders.s[j].step;
+			if (sliders.s[j].pos < sliders.s[j].start) { sliders.s[j].pos = sliders.s[j].start; }
+			tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos;
+		}
+	}
+	
+}
+
 
 	</script>
 </head>
@@ -195,20 +369,23 @@ function drawArrowDown(canvas) {
 	<div id="controlbox">
 		<div id="slidersleft">
 			<div class="sliderbox">
-				<div class="arrowupbox"><canvas class="arrowup" width="84" height="36" /></div>
-				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="36" /></div>
-				<div class="sliderbg"></div>
-				<div class="slider" id="slider1">Servo L</div>
+				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
+				<div class="slider" id="sliders1">Servo L</div>
+				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
+				<!-- <div class="sliderbg"></div>
+				<div class="slider" id="sliders1">Servo L</div>
 				
-				<div class="centerservo"></div>
+				<div class="centerservo"></div> -->
 			</div>
 			<div class="sliderbox">
-				<div class="arrowupbox"><canvas class="arrowup" width="84" height="36" /></div>
-				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="36" /></div>
-				<div class="sliderbg"></div>
-				<div class="slider" id="slider2">Servo R</div>
+				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
+				<div class="slider" id="sliders2">Servo R</div>
+				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
+				
+				<!-- <div class="sliderbg"></div>
+				<div class="slider" id="sliders2">Servo R</div>
 
-				<div class="centerservo"></div>
+				<div class="centerservo"></div> -->
 			</div>
 			<!-- <div class="sliderbox">
 				<div id="sliderm2bg"></div>
@@ -229,16 +406,18 @@ function drawArrowDown(canvas) {
 		</div>
 		<div id="slidersright">
 			<div class="sliderbox">
-				<div class="arrowupbox"><canvas class="arrowup" width="84" height="36" /></div>
-				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="36" /></div>
-				<div class="sliderbg"></div>
+				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
 				<div class="slider" id="sliderm1">Motor 1</div>
+				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
+				<!-- <div class="sliderbg"></div>
+				<div class="slider" id="sliderm1">Motor 1</div> -->
 			</div>
 			<div class="sliderbox">
-				<div class="arrowupbox"><canvas class="arrowup" width="84" height="36" /></div>
-				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="36" /></div>
-				<div class="sliderbg"></div>
+				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
 				<div class="slider" id="sliderm3">Motor 3</div>
+				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
+				<!-- <div class="sliderbg"></div>
+				<div class="slider" id="sliderm3">Motor 3</div> -->
 			</div>
 		</div>
 	</div>
