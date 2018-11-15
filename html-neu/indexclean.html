@@ -12,9 +12,11 @@
 body {
 	-webkit-user-select: none !important;
 	user-select: none !important;
+	font-size: 24px; 
+	font-family: sans-serif; 
 }
 
-#scrollme, #controlbox, #bottombox {
+#scrollme, #controlbox, #bottombox, #settingsbox {
 	display: none; 
 }
 
@@ -27,7 +29,6 @@ body {
 	padding: 0px;
 	font-family: sans-serif;
 	font-weight: bold; 
-	font-size: 16px; 	
 }
 
 #rotate .inner, #scrollme .inner {
@@ -37,6 +38,7 @@ body {
 	left: 50%;
 	transform: translate(-50%, -50%);
 	text-align: center; 
+	font-size: 24px; 	
 }
 
 /* kleine Tablets, grosse Smartphones */
@@ -67,13 +69,14 @@ body {
 		top: -1px;
 		width: calc(100vw - 6px);
 		height: 99vh; 
+		z-index: 50; 
 	}
 
 	#bottombox {
 		display: block; 
 		position: relative;
 		width: calc(100vw - 2px);
-		height: 220vh; 
+		height: 400vh;
 	}
 	
 	#slidersleft, #slidersright {
@@ -87,14 +90,100 @@ body {
 		top: calc(50vh - 125px); 
 	}
 	#slidersright {
+		display: none; 
 		position: absolute;
 		right: 0;
 		top: calc(50vh - 125px); 
 	}
+	
+	#crosscontrols {
+		display: block; 
+		position: absolute;
+		right: 0;
+		top: calc(50vh - 125px); 
+		width: 252px;
+		height: 252px; 
+	}
+	
+	#buttonup {
+		display: block; 
+		position: absolute;
+		left: 84px;
+		top: 0px;
+		z-index: 100;
+	}
+	
+	#buttondown {
+		display: block; 
+		position: absolute;
+		left: 84px;
+		bottom: 0px;
+		z-index: 100;
+	}
+	
+	#buttonleft {
+		display: block; 
+		position: absolute;
+		left: 0px;
+		top: 82px;
+		z-index: 100;
+	}
+	
+	#buttonright {
+		display: block; 
+		position: absolute;
+		right: 0px;
+		top: 82px;
+		z-index: 100;
+	}
+	
+	#centerpanel {
+		display: block; 
+		position: absolute;
+		right: 84px;
+		top: 82px;
+		z-index: 90;
+	}
+	
+	#directionpanel {
+		display: block; 
+		position: absolute;
+		left: 84px;
+		top: 82px;
+		z-index: 92;
+		width: 84px;
+		height: 84px; 
+	}
+	
+	#directionindicator {
+		display: block; 
+		position: absolute;
+		bottom: 38px;
+		left: 38px;
+		height: 8px;
+		width: 8px;
+		/* z-index: 94; */
+		background-color: black;
+	}
+	
+	#stopbutton {
+		display: block; 
+		position: absolute;
+		left: 84px;
+		top: 110px;
+		z-index: 200;
+		width: 84px;
+		text-align: center;
+		color: white;
+		font-weight: bold;
+		font-size: 24px;
+	}
+	
 	div.sliderbox {
 		-webkit-user-select: none !important;
 		user-select: none !important;
 		position: relative;
+		z-index: 10; 
 		width: 84px;
 		height: 250px;
 		padding: 0;
@@ -111,7 +200,7 @@ body {
 		position: absolute;
 		top: 0;
 		left: 0; 
-		z-index: 15;
+		z-index: 100;
 		height: 80px;
 		width: 84px; 
 		/* touch-action: none; */
@@ -123,7 +212,7 @@ body {
 		position: absolute;
 		bottom: 0;
 		left: 0; 
-		z-index: 16;
+		z-index: 100; 
 		height: 80px;
 		width: 84px; 
 		/* touch-action: none; */
@@ -134,11 +223,11 @@ body {
 		touch-action: none;
 	} */ 
 	.sliderbg {
-		display: block; 
+		display: none; 
 		position: absolute;
 		top: 15px;
 		left: 28px; 
-		z-index: 10; 
+		z-index: 70; 
 		height: 220px;
 		width: 28px;
 		background-color: lightgray; 
@@ -148,10 +237,26 @@ body {
 		position: absolute;
 		top: 85px;
 		left: 0px; 
-		z-index: 13; 
+		z-index: 150; 
 		height: 80px;
 		width: 84px;
 		text-align: center; 
+	}
+	
+	.sliderindicator {
+		display: block;
+		position: absolute;
+		bottom: 78px;
+		left: 0px; 
+		height: 8px;
+		width: 84px;
+		z-index: 98; 
+		background-color: black; 
+	}
+	
+	p.close {
+		text-align: right; 
+		font-weight: bold; 
 	}
 	
 }
@@ -159,6 +264,19 @@ body {
 	<script>
 	
 var upTimer = null; 
+var crossTimer = null; 
+var joyStick = 'caterpillar';
+	
+var crosscontrol = {
+	speed : 0.0,
+	angle : 0.0,
+	up : 0,
+	down : 0,
+	left : 0,
+	right : 0,
+	stephorizontal : 0.05,
+	stepvertical : 0.05 
+};
 	
 var sliders = {
 	s : [
@@ -168,55 +286,159 @@ var sliders = {
 			start : 0,
 			end: 180,
 			pos : 90,
+			def : 90,
 			step : 15,
 			up : 0,
 			down : 0,
+			invert : 1.0,
 			center : "Neutral",
-			cc : "black" },
+			cc : "black",
+			display : "block" },
 		{ 	name : "sliders2",
 			text : "Servo R",
 			type: "servo",
 			start : 0,
 			end: 180,
 			pos : 90,
+			def : 90,
 			step : 15,
 			up : 0,
 			down : 0,
+			invert : 1.0,
 			center : "Neutral",
-			cc : "black" },
+			cc : "black",
+			display : "block" },
 		{ 	name : "sliderm1",
 			text : "Motor 1",
 			type: "motor",
 			start : -255,
 			end: 255,
 			pos : 0,
+			def : 0,
 			step : 16,
 			up : 0,
 			down : 0,
+			invert : 1.0,
 			center : "STOP",
-			cc : "red" },
+			cc : "red",
+			display : "block" },
 		{ 	name : "sliderm3",
 			text : "Motor 3",
 			type: "motor",
 			start : -255,
 			end: 255,
 			pos : 0,
+			def : 0,
 			step : 16,
 			up : 0,
 			down : 0,
+			invert : 1.0,
 			center : "STOP",
-			cc : "red" }
+			cc : "red",
+			display : "block" },
+		{ 	name : "sliderm2",
+			text : "Motor 2",
+			type: "motor",
+			start : -255,
+			end: 255,
+			pos : 0,
+			def : 0,
+			step : 255,
+			up : 0,
+			down : 0,
+			invert : 1.0,
+			center : "STOP",
+			cc : "red",
+			display : "none" },
+		{ 	name : "sliderm4",
+			text : "Motor 4",
+			type: "motor",
+			start : -255,
+			end: 255,
+			pos : 0,
+			def : 0,
+			step : 16,
+			up : 0,
+			down : 0,
+			invert : 1.0,
+			center : "STOP",
+			cc : "red",
+			display : "none" },
+		{ 	name : "slidersw1",
+			text : "Switch 1",
+			type: "motor",
+			start : 0,
+			end: 255,
+			pos : 0,
+			def : 0,
+			step : 16,
+			up : 0,
+			down : 0,
+			invert : 1.0,
+			center : "STOP",
+			cc : "red",
+			display : "block" }
 	]
 };
 
 function wireTouch() {
+	showUnshowSliders(); 
 	var upArrows = document.getElementsByClassName("arrowup");
 	var downArrows = document.getElementsByClassName("arrowdown");
 	for (var i=0; i<upArrows.length; i++) { drawArrowUp(upArrows[i]); }
 	for (var j=0; j<downArrows.length; j++) { drawArrowDown(downArrows[j]); }
+	drawArrowRight(document.getElementsByClassName("arrowright")[0]); 
+	drawArrowLeft(document.getElementsByClassName("arrowleft")[0]); 
+	drawCircle();
 	getPosUp();
 	getPosDown();
+	getPosCross(); 
 	wireCenter();
+	wireStop();
+	showSettings();
+	if(!upTimer) upTimer = setInterval(countUp, 100); 
+}
+
+function showUnshowSliders() {
+	var sliderboxes = document.getElementsByClassName("sliderbox");
+	for (var i=0; i<sliderboxes.length; i++) {
+		var id = sliderboxes[i].getElementsByClassName("slider")[0].getAttribute("id");
+		for (var j=0; j<sliders.s.length; j++) {
+			if (sliders.s[j].name === id) sliderboxes[i].style.display = sliders.s[j].display;
+		}
+	}
+}
+
+function showSettings() {
+	var setbutton = document.getElementById("opensettings");
+	var closebutton = document.getElementById("closesettings");
+	setbutton.addEventListener('click', function(e) {
+		var unshow = [ "rotate", "scrollme", "controlbox", "bottombox" ];
+		for (var i=0; i<sliders.length; i++) sliders[i].s.pos =  sliders[i].s.def;
+		for (var i=0; i<unshow.length; i++) document.getElementById(unshow[i]).style.display = "none";
+		document.getElementById("settingsbox").style.display = "block"; 
+	}, false);
+	closebutton.addEventListener('click', function(e) {
+		var unshow = [ "rotate", "settingsbox" ];
+		var show = [ "scrollme", "controlbox", "bottombox" ];
+		for (var i=0; i<unshow.length; i++) document.getElementById(unshow[i]).style.display = "none";
+		for (var i=0; i<show.length; i++) document.getElementById(show[i]).style.display = "block";
+	}, false);
+}
+
+function drawCircle() {
+	var canvas = document.getElementById('drawjoystick');
+	var context = canvas.getContext('2d');
+	var centerX = canvas.width / 2;
+	var centerY = canvas.height / 2;
+	var radius = canvas.width / 2 - 1;
+	context.beginPath();
+	context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+	context.fillStyle = 'red';
+	context.fill();
+	context.lineWidth = 1;
+	context.strokeStyle = 'gray';
+	context.stroke();
 }
 
 function drawArrowUp(canvas) {
@@ -243,6 +465,38 @@ function drawArrowDown(canvas) {
 	context.lineTo(82, 52);
 	context.lineTo(42, 76);
 	context.lineTo(2, 52);
+	context.closePath();
+	context.lineWidth = 2;
+	context.strokeStyle = '#666666';
+	context.stroke();
+	context.fillStyle = "lightgray";
+	context.fill();
+}
+
+function drawArrowRight(canvas) {
+	var context = canvas.getContext("2d");
+	context.beginPath();
+	context.moveTo(2, 2);
+	context.lineTo(52, 2);
+	context.lineTo(76, 42);
+	context.lineTo(52, 82);
+	context.lineTo(2, 82);
+	context.closePath();
+	context.lineWidth = 2;
+	context.strokeStyle = '#666666';
+	context.stroke();
+	context.fillStyle = "lightgray";
+	context.fill();
+}
+
+function drawArrowLeft(canvas) {
+	var context = canvas.getContext("2d");
+	context.beginPath();
+	context.moveTo(76, 2);
+	context.lineTo(76, 82);
+	context.lineTo(32, 82);
+	context.lineTo(2, 42);
+	context.lineTo(32, 2);
 	context.closePath();
 	context.lineWidth = 2;
 	context.strokeStyle = '#666666';
@@ -288,7 +542,7 @@ function getPosDown() {
 		var dwn = sliderboxes[i].getElementsByClassName("arrowdownbox")[0]; 
 		dwn.addEventListener('touchstart', function(e) { 
 			e.preventDefault();
-			// console.log(this); 
+			console.log(this); 
 			var id = this.parentElement.getElementsByClassName("slider")[0].getAttribute("id");
 			var tbox = this.parentElement.getElementsByClassName("slider")[0]; 
 			console.log(id); 
@@ -321,52 +575,219 @@ function wireCenter() {
 		for (var j=0; j<sliders.s.length; j++) {
 			if (sliders.s[j].name === sliderboxes[i].getAttribute("id")) {
 				console.log(sliders.s[j].name); 
+				sliderboxes[i].addEventListener("click", function(e) {
+					var id = this.parentElement.getElementsByClassName("slider")[0].getAttribute("id");
+					for (var j=0; j<sliders.s.length; j++) {
+						if (sliders.s[j].name === id) {
+							sliders.s[j].up = 0;
+							sliders.s[j].down = 0;
+							sliders.s[j].pos = sliders.s[j].def ;
+						}
+					}
+				}, false); 
 			}	
 		}
 	}
 }
 
-/* function clickUp(up) {
-	var id = this.parentElement.getElementsByClassName("slider")[0].getAttribute("id");
-		// console.log(sliders.s.length); 
+function wireStop() {
+	var stop = document.getElementById("stopbutton");
+	stop.addEventListener('click', function(e) { 
+		crosscontrol.speed = 0.0;
+		crosscontrol.angle = 0.0;
+		crosscontrol.up = 0;
+		crosscontrol.down = 0;
+		crosscontrol.right = 0;
+		crosscontrol.left = 0; 
 		for (var j=0; j<sliders.s.length; j++) {
-			// console.log(sliders.s[j]["name"]); 
-			// console.log(id); 
-			if (sliders.s[j].name === id) {
-				console.log(sliders.s[j].name); 
+			if (sliders.s[j].name === "sliderm1" || sliders.s[j].name === "sliderm3") {
+				sliders.s[j].pos = 0;
 			}
 		}
-		// console.log(id);
-	return false; 
-} */
+	}, false);
+}
+
 
 function countUp() {
 	for (var j=0; j<sliders.s.length; j++) {
+		var tbox = document.getElementById(sliders.s[j].name);
 		if (sliders.s[j].up > 0) {
-			var tbox = document.getElementById(sliders.s[j].name);
 			sliders.s[j].pos += sliders.s[j].step;
 			if (sliders.s[j].pos > sliders.s[j].end) { sliders.s[j].pos = sliders.s[j].end; }
 			tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos + " " + sliders.s[j].center;
 		}
 		if (sliders.s[j].down > 0) {
-			var tbox = document.getElementById(sliders.s[j].name);
 			sliders.s[j].pos -= sliders.s[j].step;
 			if (sliders.s[j].pos < sliders.s[j].start) { sliders.s[j].pos = sliders.s[j].start; }
 			tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos + " " + sliders.s[j].center;
 		}
+		var indi = tbox.parentElement.getElementsByClassName("sliderindicator")[0];
+		indi.style.bottom = Math.round( (sliders.s[j].pos - sliders.s[j].start) / ( sliders.s[j].end - sliders.s[j].start) * 92.0 + 76.0 ) + "px";  
 	}
 	
 }
 
+function getPosCross() {
+	var up = document.getElementById("buttonup");
+	var down = document.getElementById("buttondown");
+	var left = document.getElementById("buttonleft");
+	var right = document.getElementById("buttonright");
+	up.addEventListener('touchstart', function(e) { 
+		e.preventDefault();
+		crosscontrol.speed += crosscontrol.stepvertical;
+		crosscontrol.up = 1;
+		if (crosscontrol.speed > 1.0) { crosscontrol.speed = 1.0; }
+		calculateCross();
+		if(!crossTimer) crossTimer = setInterval(updateCross, 100); 
+	}, false); 
+	up.addEventListener('touchend', function(e) { 
+		e.preventDefault();
+		crosscontrol.up = 0;
+		crosscontrol.down = 0;
+		return false;
+	}, false); 
+	down.addEventListener('touchstart', function(e) { 
+		e.preventDefault();
+		crosscontrol.speed -= crosscontrol.stepvertical;
+		crosscontrol.down = 1;
+		if (crosscontrol.speed < -1.0) { crosscontrol.speed = -1.0; }
+		calculateCross();
+		if(!crossTimer) crossTimer = setInterval(updateCross, 100); 
+	}, false); 
+	down.addEventListener('touchend', function(e) { 
+		e.preventDefault();
+		crosscontrol.down = 0;
+		crosscontrol.up = 0;
+		return false;
+	}, false); 
+	right.addEventListener('touchstart', function(e) { 
+		e.preventDefault();
+		crosscontrol.angle += crosscontrol.stephorizontal;
+		crosscontrol.right = 1;
+		if (crosscontrol.angle > 1.0) { crosscontrol.angle = 1.0; }
+		calculateCross();
+		if(!crossTimer) crossTimer = setInterval(updateCross, 100); 
+	}, false); 
+	right.addEventListener('touchend', function(e) { 
+		e.preventDefault();
+		crosscontrol.right = 0;
+		crosscontrol.left = 0;
+		return false;
+	}, false); 
+	left.addEventListener('touchstart', function(e) { 
+		e.preventDefault();
+		crosscontrol.angle -= crosscontrol.stephorizontal;
+		crosscontrol.left = 1;
+		if (crosscontrol.angle < -1.0) { crosscontrol.angle = -1.0; }
+		calculateCross();
+		if(!crossTimer) crossTimer = setInterval(updateCross, 100); 
+	}, false); 
+	left.addEventListener('touchend', function(e) { 
+		e.preventDefault();
+		crosscontrol.left = 0;
+		crosscontrol.right = 0;
+		return false;
+	}, false); 
+}
+
+function updateCross() {
+	if (crosscontrol.up > 0) { crosscontrol.speed += crosscontrol.stepvertical; }
+	if (crosscontrol.down > 0) { crosscontrol.speed -= crosscontrol.stepvertical; }
+	if (crosscontrol.right > 0) { crosscontrol.angle += crosscontrol.stephorizontal; }
+	if (crosscontrol.left > 0) { crosscontrol.angle -= crosscontrol.stephorizontal; }
+	if (crosscontrol.speed < -1.0) { crosscontrol.speed = -1.0; }
+	if (crosscontrol.speed > 1.0) { crosscontrol.speed = 1.0; }
+	if (crosscontrol.angle < -1.0) { crosscontrol.angle = -1.0; }
+	if (crosscontrol.angle > 1.0) { crosscontrol.angle = 1.0; }
+	calculateCross();
+}
+
+function calculateCross() {
+	var speedM3 = 0.0;
+	var speedM1 = 0.0;
+	var posServo1 = 0.0;
+	var dot = document.getElementById("directionindicator"); 
+	var posX = 0;
+	var posY = 0;
+	if (crosscontrol.angle >= 0.0) {
+		posY = Math.cos(crosscontrol.angle * Math.PI/2) * crosscontrol.speed * 40.0;
+		if (crosscontrol.speed >= 0) {
+		 	posX = Math.sin(crosscontrol.angle * Math.PI/2) * crosscontrol.speed * 40.0;
+		} else {
+			posX = -Math.sin(crosscontrol.angle * Math.PI/2) * crosscontrol.speed * 40.0;
+		}
+	} else {
+		posY = Math.cos(-crosscontrol.angle * Math.PI/2) * crosscontrol.speed * 40.0;
+		if (crosscontrol.speed >= 0) {
+		 	posX = -Math.sin(-crosscontrol.angle * Math.PI/2) * crosscontrol.speed * 40.0;
+		} else {
+			posX = Math.sin(-crosscontrol.angle * Math.PI/2) * crosscontrol.speed * 40.0;
+		}
+	}
+	if (joyStick === 'caterpillar') {
+		if (crosscontrol.angle >= 0.0) {
+			speedM3 = 255.0 * crosscontrol.speed;
+			speedM1 = (255.0 - 510.0 * crosscontrol.angle) * crosscontrol.speed;
+		} else {
+			speedM3 = (255.0 + 510.0 * crosscontrol.angle) * crosscontrol.speed; 
+			speedM1 = 255.0 * crosscontrol.speed;
+		}
+	} else {
+		for (var j=0; j<sliders.s.length; j++) {
+			if (sliders.s[j].name === "sliderm1") {
+				speedM1 = Math.round(crosscontrol.speed * 255.0);
+				sliders.s[j].pos = speedM1;
+			} else if (sliders.s[j].name === "sliders1") {
+				posServo1 = Math.round( (crosscontrol.angle + 1.0) * 90.0);
+				sliders.s[j].pos = posServo1; 
+			}
+		} 
+	}
+	dot.style.bottom = Math.round(38.0 + posY) + "px";
+	dot.style.left = Math.round(38.0 + posX) + "px";
+	console.log("Direction: " + crosscontrol.angle + " Speed: " + crosscontrol.speed + " M3(L): " + speedM3 + " M1(R): " + speedM1 + " PosX: " + Math.round(posX) + " posY: " + Math.round(posY) + " Servo1: " + posServo1); 
+}
+
+function toggleInvert(n) {
+	for (var j=0; j<sliders.s.length; j++) {
+		if (sliders.s[j].name === n.getAttribute("class")) {
+			if (this.checked) {
+				sliders.s[j].invert = -1.0; 
+			} else {
+				sliders.s[j].invert = 1.0; 
+			}
+		}
+	}
+}
+
+function showJoyStick(type) { 
+	var servoslider = document.getElementById("uisettings").getElementsByClassName("sliders1")[0];
+	if (type === "car") {
+		for (var j=0; j<sliders.s.length; j++) {
+			// Do not show slider for Servo 1
+			if (sliders.s[j].name === "sliders1") sliders.s[j].display = "none";
+		}
+		document.getElementById("sliders1").parentElement.style.display = "none";
+		servoslider.checked = false;
+		servoslider.disabled = true;
+	} else {
+		servoslider.disabled = false;
+	}
+	joyStick = type; 
+}
+
+function toggleSliders(d) {
+	
+}
 
 	</script>
 </head>
 <body onLoad="wireTouch();">
 	<div id="rotate">
-		<div class="inner">Please switch to landscape mode!</div>
+		<div class="inner">Welcome to Eitech Robotics!<br /><br />Please switch to landscape mode.</div>
 	</div>
 	<div id="scrollme">
-		<div class="inner">Scroll up to hide navigation bar!</div>
+		<div class="inner">Welcome to Eitech Robotics!<br /><br />Scroll down until the controls stay fixed.<br /><br /><span id="opensettings">[Open settings]</span></div>
 	</div>
 	<div id="controlbox">
 		<div id="slidersleft">
@@ -374,56 +795,120 @@ function countUp() {
 				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
 				<div class="slider" id="sliders1">Servo L</div>
 				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
-				<!-- <div class="sliderbg"></div>
-				<div class="slider" id="sliders1">Servo L</div>
-				
-				<div class="centerservo"></div> -->
+				<div class="sliderindicator"></div>
 			</div>
 			<div class="sliderbox">
 				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
 				<div class="slider" id="sliders2">Servo R</div>
 				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
-				
-				<!-- <div class="sliderbg"></div>
-				<div class="slider" id="sliders2">Servo R</div>
-
-				<div class="centerservo"></div> -->
-			</div>
-			<!-- <div class="sliderbox">
-				<div id="sliderm2bg"></div>
-				<div id="sliderm2">Motor 2</div><div class="motorstop">STOP</div>
-			</div> -->
-			<!-- <div class="sliderbox">
-				<div id="sliderm4bg"></div>
-				<div id="sliderm4">Motor 4</div><div class="motorstop">STOP</div>
+				<div class="sliderindicator"></div>
 			</div>
 			<div class="sliderbox">
-				<div id="sliderm3lbg"></div>
-				<div id="sliderm3l">Motor 3</div><div class="motorstop">STOP</div>
+				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
+				<div class="slider" id="sliderm2">Motor 2</div>
+				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
+				<div class="sliderindicator"></div>
 			</div>
 			<div class="sliderbox">
-				<div id="sliders1bg"></div>
-				<div id="sliders1">Switch 1</div><div class="switchstop">STOP</div>
-			</div> -->
+				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
+				<div class="slider" id="sliderm4">Motor 4</div>
+				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
+				<div class="sliderindicator"></div>
+			</div>
+			<div class="sliderbox">
+				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
+				<div class="slider" id="slidersw1">Switch 1</div>
+				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
+				<div class="sliderindicator"></div>
+			</div>
 		</div>
 		<div id="slidersright">
 			<div class="sliderbox">
 				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
 				<div class="slider" id="sliderm1">Motor 1</div>
 				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
-				<!-- <div class="sliderbg"></div>
-				<div class="slider" id="sliderm1">Motor 1</div> -->
+				<div class="sliderindicator"></div>
 			</div>
 			<div class="sliderbox">
 				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
 				<div class="slider" id="sliderm3">Motor 3</div>
 				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
-				<!-- <div class="sliderbg"></div>
-				<div class="slider" id="sliderm3">Motor 3</div> -->
+				<div class="sliderindicator"></div>
 			</div>
+		</div>
+		<div id="crosscontrols">
+			<div id="buttonup"><canvas class="arrowup" width="84" height="80" /></div>
+			<div id="buttondown"><canvas class="arrowdown" width="84" height="80" /></div>
+			<div id="centerpanel"><canvas id="drawjoystick" width="84" height="84" /></div>
+			<div id="directionpanel"><div id="directionindicator"></div></div>
+			<div id="stopbutton">STOP</div>
+			<div id="buttonleft"><canvas class="arrowleft" width="80" height="84" /></div>
+			<div id="buttonright"><canvas class="arrowright" width="80" height="84" /></div>
 		</div>
 	</div>
 	<div id ="bottombox">
+	</div>
+	<div id="settingsbox">
+		<h3>Settings</h3>
+		<p>
+			<form>
+				<div class="groupfields">
+				<fieldset>
+					<legend>Direction of servos and motors</legend>
+					<input type="checkbox" onClick="toggleInvert(this);" id="invertml" class="sliderm1">Invert motor M1 (right)</input><br />
+					<input type="checkbox" onClick="toggleInvert(this);" id="invertmr" class="sliderm3">Invert motor M3 (left)</input><br />
+					<input type="checkbox" onClick="toggleInvert(this);" id="invertm4" class="sliderm4">Invert motor M4</input><br />
+					<input type="checkbox" onClick="toggleInvert(this);" id="invertm2" class="sliderm2">Invert motor M2 (no PWM!)</input><br />
+					<input type="checkbox" onClick="toggleInvert(this);" id="inverts1" class="sliders1">Invert servo L</input><br />
+					<input type="checkbox" onClick="toggleInvert(this);" id="inverts2" class="sliders2">Invert servo R</input>
+				</fieldset>
+				<fieldset id="uisettings">
+					<legend>User interface</legend>
+					<input type="radio" name="joystick" onClick="showJoyStick('caterpillar');" checked>Show joystick (M1 and M3)</input><br />
+					<input type="radio" name="joystick" onClick="showJoyStick('car');">Show joystick (M1 and servo 1)</input><br />
+					<input type="radio" name="joystick" onClick="showJoyStick('sliders');">Show two sliders</input><br />
+					<input type="checkbox" onClick="toggleSliders(this);" class="sliderm1" checked>Show slider M1</input><br />
+					<input type="checkbox" onClick="toggleSliders(this);" class="sliderm3" checked>Show slider M3</input><br />
+					<input type="checkbox" onClick="toggleSliders(this);" class="sliderm4">Show slider M4</input><br />
+					<input type="checkbox" onClick="toggleSliders(this);" class="sliderm2">Show slider M2 (no PWM!)</input><br />
+					<input type="checkbox" onClick="toggleSliders(this);" class="slidersw1" checked>Show slider S1</input><br />
+					<input type="checkbox" onClick="toggleSliders(this);" class="sliders1" checked>Show slider servo 1</input><br />
+					<input type="checkbox" onClick="toggleSliders(this);" class="sliders2" checked>Show slider servo 2</input>
+				</fieldset>
+				</div>
+				<div class="groupfields">
+				<fieldset>
+					<legend>Behaviour of S1 slider</legend>
+					<input type="radio" name="s1behaviour" checked>Linear modulation</input><br />
+					<input type="radio" name="s1behaviour">On/off</input><br />
+					<input type="radio" name="s1behaviour">Sinus wave (rotating beacon)</input><br />
+					<input type="radio" name="s1behaviour">Hard flash</input>
+				</fieldset>
+				<fieldset>
+					<legend>Language</legend>
+					<select name="language">
+						<option value="de">Deutsch</option>
+						<option value="en" selected>English</option>
+						<option value="es">Espa&ntilde;ol</option>
+						<option value="fr">Fran&ccedil;ais</option>
+					</select>
+				</fieldset>
+				<fieldset>
+					<legend>Labels for sliders</legend>
+					<input type="text" size="26" value="Servo L" id="labelservol" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Servo R" id="labelservor" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Motor 1" id="labelmotorl" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Motor 2" id="labelmotor2" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Motor 3" id="labelmotorr" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Motor 4" id="labelmotor4" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Switch 1" id="labelswitch1" onInput="updatelabel(this);"></input>
+				</fieldset>
+				</div>
+			</form>
+		</p>
+		<p class="close">
+			<span id="closesettings">[Close settings]</span>
+		</p>
 	</div>
 </body>
 	
