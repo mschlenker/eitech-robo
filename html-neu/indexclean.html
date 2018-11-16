@@ -736,6 +736,7 @@ function updateCross() {
 }
 
 function calculateCross() {
+	if (document.getElementById("uisettings").getElementsByClassName("slidersonly")[0].checked) return false; 
 	var speedM3 = 0.0;
 	var speedM1 = 0.0;
 	var posServo1 = 0.0;
@@ -946,7 +947,7 @@ function updatelabel(d) {
 					<legend>User interface</legend>
 					<input type="radio" name="joystick" onClick="showJoyStick('caterpillar');" checked>Show joystick (M1 and M3)</input><br />
 					<input type="radio" name="joystick" onClick="showJoyStick('car');">Show joystick (M1 and servo 1)</input><br />
-					<input type="radio" name="joystick" onClick="showJoyStick('sliders');">Show two sliders</input><br />
+					<input type="radio" name="joystick" onClick="showJoyStick('sliders');" class="slidersonly">Show two sliders</input><br />
 					<input type="checkbox" onClick="toggleSliders(this);" class="sliderm1" checked>Show slider M1</input><br />
 					<input type="checkbox" onClick="toggleSliders(this);" class="sliderm3" checked>Show slider M3</input><br />
 					<input type="checkbox" onClick="toggleSliders(this);" class="sliderm4">Show slider M4</input><br />
