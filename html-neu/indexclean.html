@@ -16,6 +16,11 @@ body {
 	font-family: sans-serif; 
 }
 
+form input {
+	font-size: 24px; 
+	font-family: sans-serif; 
+}
+
 #scrollme, #controlbox, #bottombox, #settingsbox {
 	display: none; 
 }
@@ -770,14 +775,43 @@ function showJoyStick(type) {
 		document.getElementById("sliders1").parentElement.style.display = "none";
 		servoslider.checked = false;
 		servoslider.disabled = true;
-	} else {
+		// Move sliderm2 to the left box
+		document.getElementById("slidersleft").appendChild(document.getElementById("sliderm2").parentElement);
+		document.getElementById("slidersright").style.display = "none"; 
+		document.getElementById("crosscontrols").style.display = "block"; 
+	} else if (type === "caterpillar") {
+		// Enable slider for Servo1
 		servoslider.disabled = false;
+		// Move sliderm2 to the left box
+		document.getElementById("slidersleft").appendChild(document.getElementById("sliderm2").parentElement);
+		document.getElementById("slidersright").style.display = "none"; 
+		document.getElementById("crosscontrols").style.display = "block"; 
+	} else {
+		// Enable slider for Servo1
+		servoslider.disabled = false;
+		// Move sliderm2 to the right box
+		document.getElementById("slidersright").insertBefore(document.getElementById("sliderm2").parentElement, document.getElementById("sliderm1").parentElement); 
+		document.getElementById("slidersright").style.display = "block"; 
+		document.getElementById("crosscontrols").style.display = "none"; 
 	}
 	joyStick = type; 
 }
 
 function toggleSliders(d) {
-	
+	var id = d.getAttribute("class"); 
+	console.log(id); 
+	for (var j=0; j<sliders.s.length; j++) {
+		// Do not show slider for Servo 1
+		if (sliders.s[j].name ===  id) {
+			if (d.checked) {
+				document.getElementById(id).parentElement.style.display = "block";
+				sliders.s[j].display = "block"; 
+			} else {
+				document.getElementById(id).parentElement.style.display = "none";
+				sliders.s[j].display = "none"; 
+			}
+		}
+	}
 }
 
 	</script>
@@ -805,7 +839,7 @@ function toggleSliders(d) {
 			</div>
 			<div class="sliderbox">
 				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
-				<div class="slider" id="sliderm2">Motor 2</div>
+				<div class="slider" id="slidersw1">Switch 1</div>
 				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
 				<div class="sliderindicator"></div>
 			</div>
@@ -817,7 +851,7 @@ function toggleSliders(d) {
 			</div>
 			<div class="sliderbox">
 				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
-				<div class="slider" id="slidersw1">Switch 1</div>
+				<div class="slider" id="sliderm2">Motor 2</div>
 				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
 				<div class="sliderindicator"></div>
 			</div>
