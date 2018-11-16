@@ -412,6 +412,7 @@ function wireTouch() {
 	for (var j=0; j<downArrows.length; j++) { drawArrowDown(downArrows[j]); }
 	drawArrowRight(document.getElementsByClassName("arrowright")[0]); 
 	drawArrowLeft(document.getElementsByClassName("arrowleft")[0]); 
+	drawGear();
 	drawCircle();
 	getPosUp();
 	getPosDown();
@@ -575,7 +576,7 @@ function getPosDown() {
 		var dwn = sliderboxes[i].getElementsByClassName("arrowdownbox")[0]; 
 		dwn.addEventListener('touchstart', function(e) { 
 			e.preventDefault();
-			console.log(this); 
+			// console.log(this); 
 			var id = this.parentElement.getElementsByClassName("slider")[0].getAttribute("id");
 			var tbox = this.parentElement.getElementsByClassName("slider")[0]; 
 			console.log(id); 
@@ -854,6 +855,74 @@ function updatelabel(d) {
 		}
 	}
 }
+
+function drawGear() {
+	var ctx = document.getElementsByClassName("gear")[0].getContext("2d");
+ctx.fillStyle = 'green';
+ctx.strokeStyle = 'black';
+	var cx      = 42,                    // center x
+    cy      = 42,                    // center y
+    notches = 7,                      // num. of notches
+    radiusO = 39,                    // outer radius
+    radiusI = 27,                    // inner radius
+    radiusH = 13,
+    taperO  = 50,                     // outer taper %
+    taperI  = 35,                     // inner taper %
+
+    // pre-calculate values for loop
+
+    pi2     = 2 * Math.PI,            // cache 2xPI (360deg)
+    angle   = pi2 / (notches * 2),    // angle between notches
+    taperAI = angle * taperI * 0.005, // inner taper offset (100% = half notch)
+    taperAO = angle * taperO * 0.005, // outer taper offset
+    a       = angle,                  // iterator (angle)
+    toggle  = false;                  // notch radius level (i/o)
+    
+    // move to starting point
+ctx.moveTo(cx + radiusO * Math.cos(taperAO), cy + radiusO * Math.sin(taperAO));
+
+// loop
+for (; a <= pi2; a += angle) {
+
+    // draw inner to outer line
+    if (toggle) {
+        ctx.lineTo(cx + radiusI * Math.cos(a - taperAI),
+                   cy + radiusI * Math.sin(a - taperAI));
+        ctx.lineTo(cx + radiusO * Math.cos(a + taperAO),
+                   cy + radiusO * Math.sin(a + taperAO));
+    }
+
+    // draw outer to inner line
+    else {
+        ctx.lineTo(cx + radiusO * Math.cos(a - taperAO),  // outer line
+                   cy + radiusO * Math.sin(a - taperAO));
+        ctx.lineTo(cx + radiusI * Math.cos(a + taperAI),  // inner line
+                   cy + radiusI * Math.sin(a + taperAI));
+    }
+
+    // switch level
+    toggle = !toggle;
+}
+
+// close the final line
+ctx.closePath();
+// without filling/stroking, continue with:
+
+// Punch hole
+ctx.moveTo(cx + radiusH, cy);
+ctx.arc(cx, cy, radiusH, 0, pi2);
+
+// now fill using even-odd rule
+ctx.fillStyle = '#aaa';
+ctx.fill("evenodd");
+
+// stroke
+ctx.lineWidth = 2;
+ctx.strokeStyle = '#000';
+ctx.stroke();
+
+}
+
 	</script>
 </head>
 <body onLoad="wireTouch();">
@@ -861,7 +930,7 @@ function updatelabel(d) {
 		<div class="inner">Welcome to Eitech Robotics!<br /><br />Please switch to landscape mode.</div>
 	</div>
 	<div id="scrollme">
-		<div class="inner">Welcome to Eitech Robotics!<br /><br />Scroll down until the controls stay fixed.<br /><br /><span id="opensettings">[Open settings]</span></div>
+		<div class="inner">Welcome to Eitech Robotics!<br /><br />Scroll down until the controls stay fixed.<br /><br /><span id="opensettings"><canvas class="gear" width="84" height="84" /></span></div>
 	</div>
 	<div id="controlbox">
 		<div id="slidersleft">
