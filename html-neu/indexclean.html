@@ -282,6 +282,14 @@ form input {
 		font-weight: bold; 
 	}
 	
+	.closecontainer {
+		display: block; 
+		position: absolute;
+		top: 5px;
+		right: 5px; 
+		z-index: 180; 
+	}
+	
 }
 	</style>
 	<script>
@@ -413,6 +421,7 @@ function wireTouch() {
 	drawArrowRight(document.getElementsByClassName("arrowright")[0]); 
 	drawArrowLeft(document.getElementsByClassName("arrowleft")[0]); 
 	drawGear();
+	drawClose();
 	drawCircle();
 	getPosUp();
 	getPosDown();
@@ -440,7 +449,7 @@ function showUnshowSliders() {
 
 function showSettings() {
 	var setbutton = document.getElementById("opensettings");
-	var closebutton = document.getElementById("closesettings");
+	var closebutton = document.getElementsByClassName('closeicon')[0].parentElement; 
 	setbutton.addEventListener('click', function(e) {
 		for (var j=0; j<sliders.s.length; j++) {
 			sliders.s[j].pos = sliders.s[j].def; 
@@ -472,6 +481,38 @@ function drawCircle() {
 	context.fill();
 	context.lineWidth = 1;
 	context.strokeStyle = 'gray';
+	context.stroke();
+}
+
+function drawClose() {
+	var canvas = document.getElementsByClassName('closeicon')[0];
+	var context = canvas.getContext('2d');
+	var centerX = canvas.width / 2;
+	var centerY = canvas.height / 2;
+	var radius = canvas.width / 2 - 1;
+	context.beginPath();
+	context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+	context.moveTo(42, 28);
+	context.lineTo(56, 14);
+	context.lineTo(70, 28);
+	context.lineTo(56, 42);
+	context.lineTo(70, 56);
+	context.lineTo(70, 56);
+	context.lineTo(56, 70);
+	context.lineTo(42, 56);
+	context.lineTo(28, 70);
+	context.lineTo(14, 56);
+	context.lineTo(28, 42);
+	context.lineTo(14, 28);
+	context.lineTo(28, 14);
+	
+	
+	context.closePath();
+	
+	context.fillStyle = 'red';
+	context.fill("evenodd");
+	context.lineWidth = 1;
+	context.strokeStyle = 'black';
 	context.stroke();
 }
 
@@ -999,6 +1040,7 @@ ctx.stroke();
 	<div id ="bottombox">
 	</div>
 	<div id="settingsbox">
+		<div class="closecontainer"><canvas class="closeicon" width="84" height="84" /></div>
 		<h3>Settings</h3>
 		<p>
 			<form>
@@ -1055,9 +1097,6 @@ ctx.stroke();
 				</fieldset>
 				</div>
 			</form>
-		</p>
-		<p class="close">
-			<span id="closesettings">[Close settings]</span>
 		</p>
 	</div>
 </body>
