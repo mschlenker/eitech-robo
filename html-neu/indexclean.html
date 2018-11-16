@@ -21,6 +21,11 @@ form input {
 	font-family: sans-serif; 
 }
 
+.sliderbox {
+	font-size: 12px; 
+	font-family: sans-serif; 
+}
+
 #scrollme, #controlbox, #bottombox, #settingsbox {
 	display: none; 
 }
@@ -247,7 +252,20 @@ form input {
 		width: 84px;
 		text-align: center; 
 	}
-	
+	.stop {
+		display: block; 
+		position: absolute;
+		top: 106px;
+		left: 10px; 
+		z-index: 180; 
+		height: 40px;
+		width: 64px;
+		text-align: center; 
+		color : white;
+		font-size: 16px;
+		font-weight: bold; 
+		padding-top: 10px; 
+	}
 	.sliderindicator {
 		display: block;
 		position: absolute;
@@ -409,7 +427,12 @@ function showUnshowSliders() {
 	for (var i=0; i<sliderboxes.length; i++) {
 		var id = sliderboxes[i].getElementsByClassName("slider")[0].getAttribute("id");
 		for (var j=0; j<sliders.s.length; j++) {
-			if (sliders.s[j].name === id) sliderboxes[i].style.display = sliders.s[j].display;
+			if (sliders.s[j].name === id) {
+				sliderboxes[i].style.display = sliders.s[j].display;
+				sliderboxes[i].getElementsByClassName("stop")[0].innerHTML = sliders.s[j].center;
+				sliderboxes[i].getElementsByClassName("stop")[0].style.backgroundColor = sliders.s[j].cc;
+				sliderboxes[i].getElementsByClassName("slider")[0].innerHTML = sliders.s[j].text;
+			}
 		}
 	}
 }
@@ -418,6 +441,9 @@ function showSettings() {
 	var setbutton = document.getElementById("opensettings");
 	var closebutton = document.getElementById("closesettings");
 	setbutton.addEventListener('click', function(e) {
+		for (var j=0; j<sliders.s.length; j++) {
+			sliders.s[j].pos = sliders.s[j].def; 
+		}
 		var unshow = [ "rotate", "scrollme", "controlbox", "bottombox" ];
 		for (var i=0; i<sliders.length; i++) sliders[i].s.pos =  sliders[i].s.def;
 		for (var i=0; i<unshow.length; i++) document.getElementById(unshow[i]).style.display = "none";
@@ -524,7 +550,7 @@ function getPosUp() {
 					if (sliders.s[j].pos > sliders.s[j].end) sliders.s[j].pos = sliders.s[j].end; 
 					console.log(sliders.s[j].name + " " + sliders.s[j].pos); 
 					sliders.s[j].up = 1;
-					tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos + " " + sliders.s[j].center;
+					// tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos + " " + sliders.s[j].center;
 				}
 				if(!upTimer) upTimer = setInterval(countUp, 100); 
 			}
@@ -557,7 +583,7 @@ function getPosDown() {
 					if (sliders.s[j].pos < sliders.s[j].start) sliders.s[j].pos = sliders.s[j].start; 
 					console.log(sliders.s[j].name + " " + sliders.s[j].pos);
 					sliders.s[j].down = 1;
-					tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos + " " + sliders.s[j].center ;
+					// tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos + " " + sliders.s[j].center ;
 				}
 			}
 			if(!upTimer) upTimer = setInterval(countUp, 100); 
@@ -619,12 +645,12 @@ function countUp() {
 		if (sliders.s[j].up > 0) {
 			sliders.s[j].pos += sliders.s[j].step;
 			if (sliders.s[j].pos > sliders.s[j].end) { sliders.s[j].pos = sliders.s[j].end; }
-			tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos + " " + sliders.s[j].center;
+			tbox.innerHTML =  sliders.s[j].text; // + " " + sliders.s[j].pos;
 		}
 		if (sliders.s[j].down > 0) {
 			sliders.s[j].pos -= sliders.s[j].step;
 			if (sliders.s[j].pos < sliders.s[j].start) { sliders.s[j].pos = sliders.s[j].start; }
-			tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos + " " + sliders.s[j].center;
+			tbox.innerHTML =  sliders.s[j].text; //  + " " + sliders.s[j].pos;
 		}
 		var indi = tbox.parentElement.getElementsByClassName("sliderindicator")[0];
 		indi.style.bottom = Math.round( (sliders.s[j].pos - sliders.s[j].start) / ( sliders.s[j].end - sliders.s[j].start) * 92.0 + 76.0 ) + "px";  
@@ -799,7 +825,7 @@ function showJoyStick(type) {
 
 function toggleSliders(d) {
 	var id = d.getAttribute("class"); 
-	console.log(id); 
+	// console.log(id); 
 	for (var j=0; j<sliders.s.length; j++) {
 		// Do not show slider for Servo 1
 		if (sliders.s[j].name ===  id) {
@@ -814,6 +840,17 @@ function toggleSliders(d) {
 	}
 }
 
+function updatelabel(d) {
+	var id = d.getAttribute("class"); 
+	console.log(id); 
+	for (var j=0; j<sliders.s.length; j++) {
+		// Do not show slider for Servo 1
+		if (sliders.s[j].name ===  id) {
+			document.getElementById(id).innerHTML = d.value;
+			sliders.s[j].text = d.value; 
+		}
+	}
+}
 	</script>
 </head>
 <body onLoad="wireTouch();">
@@ -830,30 +867,35 @@ function toggleSliders(d) {
 				<div class="slider" id="sliders1">Servo L</div>
 				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
 				<div class="sliderindicator"></div>
+				<div class="stop"></div>
 			</div>
 			<div class="sliderbox">
 				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
 				<div class="slider" id="sliders2">Servo R</div>
 				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
 				<div class="sliderindicator"></div>
+				<div class="stop"></div>
 			</div>
 			<div class="sliderbox">
 				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
 				<div class="slider" id="slidersw1">Switch 1</div>
 				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
 				<div class="sliderindicator"></div>
+				<div class="stop"></div>
 			</div>
 			<div class="sliderbox">
 				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
 				<div class="slider" id="sliderm4">Motor 4</div>
 				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
 				<div class="sliderindicator"></div>
+				<div class="stop"></div>
 			</div>
 			<div class="sliderbox">
 				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
 				<div class="slider" id="sliderm2">Motor 2</div>
 				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
 				<div class="sliderindicator"></div>
+				<div class="stop"></div>
 			</div>
 		</div>
 		<div id="slidersright">
@@ -862,12 +904,14 @@ function toggleSliders(d) {
 				<div class="slider" id="sliderm1">Motor 1</div>
 				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
 				<div class="sliderindicator"></div>
+				<div class="stop"></div>
 			</div>
 			<div class="sliderbox">
 				<div class="arrowupbox"><canvas class="arrowup" width="84" height="80" /></div>
 				<div class="slider" id="sliderm3">Motor 3</div>
 				<div class="arrowdownbox"><canvas class="arrowdown" width="84" height="80" /></div>
 				<div class="sliderindicator"></div>
+				<div class="stop"></div>
 			</div>
 		</div>
 		<div id="crosscontrols">
@@ -929,13 +973,13 @@ function toggleSliders(d) {
 				</fieldset>
 				<fieldset>
 					<legend>Labels for sliders</legend>
-					<input type="text" size="26" value="Servo L" id="labelservol" onInput="updatelabel(this);"></input><br />
-					<input type="text" size="26" value="Servo R" id="labelservor" onInput="updatelabel(this);"></input><br />
-					<input type="text" size="26" value="Motor 1" id="labelmotorl" onInput="updatelabel(this);"></input><br />
-					<input type="text" size="26" value="Motor 2" id="labelmotor2" onInput="updatelabel(this);"></input><br />
-					<input type="text" size="26" value="Motor 3" id="labelmotorr" onInput="updatelabel(this);"></input><br />
-					<input type="text" size="26" value="Motor 4" id="labelmotor4" onInput="updatelabel(this);"></input><br />
-					<input type="text" size="26" value="Switch 1" id="labelswitch1" onInput="updatelabel(this);"></input>
+					<input type="text" size="26" value="Servo L" class="sliders1" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Servo R" class="sliders2" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Motor 1" class="sliderm1" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Motor 2" class="sliderm2" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Motor 3" class="sliderm3" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Motor 4" class="sliderm4" onInput="updatelabel(this);"></input><br />
+					<input type="text" size="26" value="Switch 1" class="slidersw1" onInput="updatelabel(this);"></input>
 				</fieldset>
 				</div>
 			</form>
