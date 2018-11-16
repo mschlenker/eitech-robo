@@ -444,6 +444,8 @@ function showSettings() {
 		for (var j=0; j<sliders.s.length; j++) {
 			sliders.s[j].pos = sliders.s[j].def; 
 		}
+		crosscontrol.angle = 0.0;
+		crosscontrol.speed = 0.0; 
 		var unshow = [ "rotate", "scrollme", "controlbox", "bottombox" ];
 		for (var i=0; i<sliders.length; i++) sliders[i].s.pos =  sliders[i].s.def;
 		for (var i=0; i<unshow.length; i++) document.getElementById(unshow[i]).style.display = "none";
@@ -606,7 +608,7 @@ function wireCenter() {
 		for (var j=0; j<sliders.s.length; j++) {
 			if (sliders.s[j].name === sliderboxes[i].getAttribute("id")) {
 				console.log(sliders.s[j].name); 
-				sliderboxes[i].addEventListener("click", function(e) {
+				sliderboxes[i].parentElement.getElementsByClassName("stop")[0].addEventListener("click", function(e) {
 					var id = this.parentElement.getElementsByClassName("slider")[0].getAttribute("id");
 					for (var j=0; j<sliders.s.length; j++) {
 						if (sliders.s[j].name === id) {
