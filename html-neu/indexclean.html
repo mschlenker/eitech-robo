@@ -59,6 +59,10 @@ form input {
 		display: none; 
 	}
 
+	#settingsbox {
+		padding-bottom: 90px;
+	}
+
 	#scrollme {
 		display: block;
 		position: relative;
@@ -290,6 +294,14 @@ form input {
 		z-index: 180; 
 	}
 	
+	.safecontainer {
+		display: block; 
+		position: absolute;
+		top: 5px;
+		right: 95px; 
+		z-index: 180; 
+	}
+	
 }
 	</style>
 	<script>
@@ -308,6 +320,19 @@ var crosscontrol = {
 	stephorizontal : 0.05,
 	stepvertical : 0.05 
 };
+	
+var loc = {
+	"en" : {
+		welcome : "Welcome to Eitech Robotics!",
+		rotate : "Please switch to landscape mode.",
+		scroll : "Scroll down until the controls stay fixed.",
+	},
+	"de" : {
+		welcome : "Willkommen bei Eitech Robotics!",
+		rotate : "Bitte drehen Sie ins Querformat.",
+		scroll : "Scrollen Sie herunter, bis die Regler ihre Position behalten.",
+	}
+}
 	
 var sliders = {
 	s : [
@@ -413,6 +438,7 @@ var sliders = {
 };
 
 function wireTouch() {
+	localize();
 	showUnshowSliders(); 
 	var upArrows = document.getElementsByClassName("arrowup");
 	var downArrows = document.getElementsByClassName("arrowdown");
@@ -423,13 +449,31 @@ function wireTouch() {
 	drawGear();
 	drawClose();
 	drawCircle();
+	drawDisk();
 	getPosUp();
 	getPosDown();
 	getPosCross(); 
 	wireCenter();
 	wireStop();
+	wireOrientation();
 	showSettings();
 	if(!upTimer) upTimer = setInterval(countUp, 100); 
+	console.log(navigator.language); 
+}
+
+function localize() {
+	var lang = navigator.language;
+	var welcome = document.getElementById("scrollme").getElementsByClassName("inner")[0];
+	var rotate = document.getElementById("rotate").getElementsByClassName("inner")[0];
+	// console.log(loc["de"].welcome);
+	welcome.appendChild(document.createTextNode(loc[lang].welcome));
+	welcome.appendChild(document.createElement("br"));
+	welcome.appendChild(document.createElement("br"));
+	welcome.appendChild(document.createTextNode(loc[lang].scroll));
+	rotate.appendChild(document.createTextNode(loc[lang].welcome));
+	rotate.appendChild(document.createElement("br"));
+	rotate.appendChild(document.createElement("br"));
+	rotate.appendChild(document.createTextNode(loc[lang].rotate));
 }
 
 function showUnshowSliders() {
@@ -450,6 +494,7 @@ function showUnshowSliders() {
 function showSettings() {
 	var setbutton = document.getElementById("opensettings");
 	var closebutton = document.getElementsByClassName('closeicon')[0].parentElement; 
+	var savebutton = document.getElementsByClassName('diskette')[0].parentElement; 
 	setbutton.addEventListener('click', function(e) {
 		for (var j=0; j<sliders.s.length; j++) {
 			sliders.s[j].pos = sliders.s[j].def; 
@@ -466,6 +511,9 @@ function showSettings() {
 		var show = [ "scrollme", "controlbox", "bottombox" ];
 		for (var i=0; i<unshow.length; i++) document.getElementById(unshow[i]).style.display = "none";
 		for (var i=0; i<show.length; i++) document.getElementById(show[i]).style.display = "block";
+	}, false);
+	savebutton.addEventListener('click', function(e) {
+		console.log("Save settings"); 
 	}, false);
 }
 
@@ -505,8 +553,6 @@ function drawClose() {
 	context.lineTo(28, 42);
 	context.lineTo(14, 28);
 	context.lineTo(28, 14);
-	
-	
 	context.closePath();
 	
 	context.fillStyle = 'red';
@@ -514,6 +560,92 @@ function drawClose() {
 	context.lineWidth = 1;
 	context.strokeStyle = 'black';
 	context.stroke();
+}
+
+function drawDisk() {
+	var canvas = document.getElementsByClassName('diskette')[0];
+	var ctx = canvas.getContext('2d');
+	ctx.beginPath();
+	ctx.moveTo(69, 0);
+	ctx.lineTo(84, 15);
+	ctx.lineTo(84, 74);
+	ctx.quadraticCurveTo(84, 84, 74, 84);
+	ctx.lineTo(10, 84);
+	ctx.quadraticCurveTo(0, 84, 0, 74);
+	ctx.lineTo(0, 10);
+	ctx.quadraticCurveTo(0, 0, 10, 0);
+	ctx.closePath();
+	ctx.fillStyle = '#353535';
+	ctx.fill();
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = 'black';
+	ctx.stroke();
+	
+	// slider
+	ctx.beginPath();
+	ctx.moveTo(13, 4);
+	ctx.lineTo(58, 4);
+	ctx.lineTo(58, 20);
+	ctx.quadraticCurveTo(58, 26, 52, 26);
+	ctx.lineTo(19, 26);
+	ctx.quadraticCurveTo(13, 26, 13, 20);
+	ctx.closePath();
+	ctx.fillStyle = 'white';
+	ctx.fill();
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = 'black';
+	ctx.stroke();
+	
+	// hole in slider
+	ctx.beginPath();
+	ctx.moveTo(52, 8);
+	ctx.lineTo(52, 22);
+	ctx.lineTo(42, 22);
+	ctx.lineTo(42, 8);
+	ctx.closePath();
+	ctx.fillStyle = '#353535';
+	ctx.fill();
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = 'black';
+	ctx.stroke();
+	
+	// label 
+	ctx.beginPath();
+	ctx.moveTo(13, 81);
+	ctx.lineTo(71, 81);
+	ctx.lineTo(71, 69);
+	ctx.lineTo(13, 69);
+	ctx.closePath();
+	ctx.fillStyle = 'white';
+	ctx.fill();
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = 'black';
+	ctx.stroke();
+	
+	ctx.beginPath();
+	ctx.moveTo(13, 67);
+	ctx.lineTo(71, 67);
+	ctx.lineTo(71, 55);
+	ctx.lineTo(13, 55);
+	ctx.closePath();
+	ctx.fillStyle = 'white';
+	ctx.fill();
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = 'black';
+	ctx.stroke();
+	
+	ctx.beginPath();
+	ctx.moveTo(13, 53);
+	ctx.lineTo(71, 53);
+	ctx.lineTo(71, 41);
+	ctx.lineTo(13, 41);
+	ctx.closePath();
+	ctx.fillStyle = 'white';
+	ctx.fill();
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = 'black';
+	ctx.stroke();
+	
 }
 
 function drawArrowUp(canvas) {
@@ -682,6 +814,34 @@ function wireStop() {
 	}, false);
 }
 
+function wireOrientation() {
+	window.addEventListener("orientationchange", function() {
+		if (screen.orientation.angle < 45 && screen.orientation.angle > -45) {
+			// portrait
+			crosscontrol.speed = 0.0;
+			crosscontrol.angle = 0.0;
+			crosscontrol.up = 0;
+			crosscontrol.down = 0;
+			crosscontrol.right = 0;
+			crosscontrol.left = 0; 
+			for (var j=0; j<sliders.s.length; j++) {
+				if (sliders.s[j].name === "sliderm1" || sliders.s[j].name === "sliderm3") {
+					sliders.s[j].pos = 0;
+				}
+			}
+			var show = [ "rotate" ];
+			var unshow = [ "scrollme", "controlbox", "bottombox", "settingsbox" ];
+			for (var i=0; i<unshow.length; i++) document.getElementById(unshow[i]).style.display = "none";
+			for (var i=0; i<show.length; i++) document.getElementById(show[i]).style.display = "block";
+		} else {
+			// landscape
+			var unshow = [ "rotate", "settingsbox" ];
+			var show = [ "scrollme", "controlbox", "bottombox" ];
+			for (var i=0; i<unshow.length; i++) document.getElementById(unshow[i]).style.display = "none";
+			for (var i=0; i<show.length; i++) document.getElementById(show[i]).style.display = "block";
+		}
+	});
+}
 
 function countUp() {
 	for (var j=0; j<sliders.s.length; j++) {
@@ -968,10 +1128,10 @@ ctx.stroke();
 </head>
 <body onLoad="wireTouch();">
 	<div id="rotate">
-		<div class="inner">Welcome to Eitech Robotics!<br /><br />Please switch to landscape mode.</div>
+		<div class="inner"><!-- Welcome to Eitech Robotics!<br /><br />Please switch to landscape mode.--></div>
 	</div>
 	<div id="scrollme">
-		<div class="inner">Welcome to Eitech Robotics!<br /><br />Scroll down until the controls stay fixed.<br /><br /><span id="opensettings"><canvas class="gear" width="84" height="84" /></span></div>
+		<div class="inner"><!-- Welcome to Eitech Robotics!<br /><br />Scroll down until the controls stay fixed.--></div><div id="opensettings"><canvas class="gear" width="84" height="84" /></div>
 	</div>
 	<div id="controlbox">
 		<div id="slidersleft">
@@ -1041,11 +1201,25 @@ ctx.stroke();
 	</div>
 	<div id="settingsbox">
 		<div class="closecontainer"><canvas class="closeicon" width="84" height="84" /></div>
+		<div class="safecontainer"><canvas class="diskette" width="84" height="84" /></div>
 		<h3>Settings</h3>
-		<p>
 			<form>
 				<div class="groupfields">
-				<fieldset>
+				<fieldset id="invertsettings">
+					<legend>About</legend>
+					<table>
+						<tr>
+							<td>Program name:</td><td>Eitech Robotics Flex v1.0</td>
+						</tr>
+						<tr>
+							<td>Program build:</td><td>Nov 17 2018 12:22:19</td>
+						</tr>
+						<tr>
+							<td>WiFi firmware:</td><td>19.5.4</td>
+						</tr>
+					</table>
+				</fieldset>
+				<fieldset id="invertsettings">
 					<legend>Direction of servos and motors</legend>
 					<input type="checkbox" onClick="toggleInvert(this);" id="invertml" class="sliderm1">Invert motor M1 (right)</input><br />
 					<input type="checkbox" onClick="toggleInvert(this);" id="invertmr" class="sliderm3">Invert motor M3 (left)</input><br />
@@ -1093,11 +1267,34 @@ ctx.stroke();
 					<input type="text" size="26" value="Motor 2" class="sliderm2" onInput="updatelabel(this);"></input><br />
 					<input type="text" size="26" value="Motor 3" class="sliderm3" onInput="updatelabel(this);"></input><br />
 					<input type="text" size="26" value="Motor 4" class="sliderm4" onInput="updatelabel(this);"></input><br />
-					<input type="text" size="26" value="Switch 1" class="slidersw1" onInput="updatelabel(this);"></input>
+					<input type="text" size="26" value="Switch 1" class="slidersw1" onInput="updatelabel(this);"></input><br />
+					<input type="button" value="Reset to defaults of selected language" />
+				</fieldset>
+				<fieldset>
+					<legend>Network</legend>
+					<table>
+						<tr>
+							<td colspan="2"><input type="radio" name="netmode" checked>Provide access point</input></td>
+						</tr>
+						<tr>
+							<td>Name:</td><td><input type="text" size="20" value="eitech-robotics" /></td>
+						</tr>
+						<tr>
+							<td>WPA2 key:</td><td><input type="text" size="20" value="" /></td>
+						</tr>
+						<tr>
+							<td colspan="2"><input type="radio" name="netmode">WiFi client</input></td>
+						</tr>
+						<tr>
+							<td>ESSID:</td><td><input type="text" size="20" value="" /></td>
+						</tr>
+						<tr>
+							<td>WPA(2) key:</td><td><input type="text" size="20" value="" /></td>
+						</tr>
+					</table>
 				</fieldset>
 				</div>
 			</form>
-		</p>
 	</div>
 </body>
 	
