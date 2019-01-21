@@ -327,6 +327,9 @@ form input {
 	
 var upTimer = null; 
 var crossTimer = null; 
+var sendTimer = null;
+var lastSendTime = 0;
+var transmitInterval = 100; // 100ms interval, don't send too often
 var joyStick = 'caterpillar';
 	
 var crosscontrol = {
@@ -748,8 +751,9 @@ function getPosUp() {
 					sliders.s[j].up = 1;
 					// tbox.innerHTML =  sliders.s[j].text + " " + sliders.s[j].pos + " " + sliders.s[j].center;
 				}
-				if(!upTimer) upTimer = setInterval(countUp, 100); 
 			}
+			if(!upTimer) upTimer = setInterval(countUp, 100); 
+			if(!sendTimer) sendTimer = setInterval(sendToServer, 300); 
 		}, false);
 		up.addEventListener('touchend', function(e) { 
 			e.preventDefault();
@@ -759,6 +763,7 @@ function getPosUp() {
 					sliders.s[j].up = 0;
 				}
 			}
+			if(!sendTimer) sendTimer = setInterval(sendToServer, 300); 
 		}, false); 
 	}
 }
@@ -783,6 +788,7 @@ function getPosDown() {
 				}
 			}
 			if(!upTimer) upTimer = setInterval(countUp, 100); 
+			if(!sendTimer) sendTimer = setInterval(sendToServer, 300); 
 		}, false);
 		dwn.addEventListener('touchend', function(e) { 
 			e.preventDefault();
@@ -792,6 +798,7 @@ function getPosDown() {
 					sliders.s[j].down = 0;
 				}
 			}
+			if(!sendTimer) sendTimer = setInterval(sendToServer, 300); 
 		}, false); 
 	}
 }
@@ -894,11 +901,13 @@ function getPosCross() {
 		if (crosscontrol.speed > 1.0) { crosscontrol.speed = 1.0; }
 		calculateCross();
 		if(!crossTimer) crossTimer = setInterval(updateCross, 100); 
+		if(!sendTimer) sendTimer = setInterval(sendToServer, 300); 
 	}, false); 
 	up.addEventListener('touchend', function(e) { 
 		e.preventDefault();
 		crosscontrol.up = 0;
 		crosscontrol.down = 0;
+		if(!sendTimer) sendTimer = setInterval(sendToServer, 300); 
 		return false;
 	}, false); 
 	down.addEventListener('touchstart', function(e) { 
@@ -908,11 +917,13 @@ function getPosCross() {
 		if (crosscontrol.speed < -1.0) { crosscontrol.speed = -1.0; }
 		calculateCross();
 		if(!crossTimer) crossTimer = setInterval(updateCross, 100); 
+		if(!sendTimer) sendTimer = setInterval(sendToServer, 300); 
 	}, false); 
 	down.addEventListener('touchend', function(e) { 
 		e.preventDefault();
 		crosscontrol.down = 0;
 		crosscontrol.up = 0;
+		if(!sendTimer) sendTimer = setInterval(sendToServer, 300); 
 		return false;
 	}, false); 
 	right.addEventListener('touchstart', function(e) { 
@@ -922,11 +933,13 @@ function getPosCross() {
 		if (crosscontrol.angle > 1.0) { crosscontrol.angle = 1.0; }
 		calculateCross();
 		if(!crossTimer) crossTimer = setInterval(updateCross, 100); 
+		if(!sendTimer) sendTimer = setInterval(sendToServer, 300); 
 	}, false); 
 	right.addEventListener('touchend', function(e) { 
 		e.preventDefault();
 		crosscontrol.right = 0;
 		crosscontrol.left = 0;
+		if(!sendTimer) sendTimer = setInterval(sendToServer, 300); 
 		return false;
 	}, false); 
 	left.addEventListener('touchstart', function(e) { 
@@ -936,11 +949,13 @@ function getPosCross() {
 		if (crosscontrol.angle < -1.0) { crosscontrol.angle = -1.0; }
 		calculateCross();
 		if(!crossTimer) crossTimer = setInterval(updateCross, 100); 
+		if(!sendTimer) sendTimer = setInterval(sendToServer, 300); 
 	}, false); 
 	left.addEventListener('touchend', function(e) { 
 		e.preventDefault();
 		crosscontrol.left = 0;
 		crosscontrol.right = 0;
+		if(!sendTimer) sendTimer = setInterval(sendToServer, 300); 
 		return false;
 	}, false); 
 }
@@ -988,6 +1003,8 @@ function calculateCross() {
 			speedM3 = (255.0 + 510.0 * crosscontrol.angle) * crosscontrol.speed; 
 			speedM1 = 255.0 * crosscontrol.speed;
 		}
+		sliders.s[2].pos = Math.round(speedM1);
+		sliders.s[3].pos = Math.round(speedM3);
 	} else {
 		for (var j=0; j<sliders.s.length; j++) {
 			if (sliders.s[j].name === "sliderm1") {
@@ -998,6 +1015,8 @@ function calculateCross() {
 				sliders.s[j].pos = posServo1; 
 			}
 		} 
+		sliders.s[2].pos = Math.round(speedM1);
+		sliders.s[0].pos = Math.round(posServo1);
 	}
 	dot.style.bottom = Math.round(38.0 + posY) + "px";
 	dot.style.left = Math.round(38.0 + posX) + "px";
@@ -1007,10 +1026,12 @@ function calculateCross() {
 function toggleInvert(n) {
 	for (var j=0; j<sliders.s.length; j++) {
 		if (sliders.s[j].name === n.getAttribute("class")) {
-			if (this.checked) {
+			if (n.checked) {
 				sliders.s[j].invert = -1.0; 
+				console.log("Inverted " + sliders.s[j].name);
 			} else {
 				sliders.s[j].invert = 1.0; 
+				console.log("Not inverted " + sliders.s[j].name);
 			}
 		}
 	}
@@ -1142,6 +1163,32 @@ ctx.lineWidth = 2;
 ctx.strokeStyle = '#000';
 ctx.stroke();
 
+}
+
+function sendToServer(){
+	var json;
+	var now = new Date().getTime();
+	if(((now-lastSendTime) > transmitInterval) || (car.speed == 0)) {
+		lastSendTime = now;
+		var xmlHttp = new XMLHttpRequest();
+		xmlHttp.onreadystatechange = function() {
+			if(xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+				json = xmlHttp.responseText;
+				readBack = JSON.parse(json);
+			}
+		};
+		// url = /M/motorL/motorR
+		var servo1 = sliders.s[0].pos
+		var servo2 = sliders.s[1].pos
+		if (sliders.s[0].invert < 0.0) { servo1 = 180.0 - sliders.s[0].pos; }
+		if (sliders.s[1].invert < 0.0) { servo2 = 180.0 - sliders.s[1].pos; }
+		var url = "/car/"+Math.round(sliders.s[2].pos * sliders.s[2].invert)+"/"+Math.round(sliders.s[3].pos * sliders.s[3].invert) + "/" + 
+			Math.round(servo1) + "/" + Math.round(servo2) + "/" +
+			Math.round(sliders.s[4].pos * sliders.s[4].invert)+"/"+Math.round(sliders.s[5].pos * sliders.s[5].invert) + "/" +
+			"0" + "/"+Math.round(sliders.s[6].pos * sliders.s[6].invert); 
+		xmlHttp.open("GET", url, true);
+		xmlHttp.send(null);
+	}
 }
 
 	</script>

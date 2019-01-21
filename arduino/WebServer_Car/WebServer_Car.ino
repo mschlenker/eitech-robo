@@ -38,8 +38,12 @@ char mdnsName[] = "robby"; // MDNS name "wattuino.local"
 #define CT_JSON  3
 #define CT_JPEG  4
 
-const uint8_t pinJ[8] = { RCJ1, RCJ1, RCJ2, RCJ3, RCJ4, RCJ5, RCJ6, RCJ7 };
-const uint8_t pinMotor[4][2] = { { RCM1A, RCM1B }, { RCM2A, RCM2B }, { RCM3A, RCM3B }, { RCM4A, RCM4B } };
+#define RCS1 37
+
+// const uint8_t pinJ[8] = { RCJ1, RCJ1, RCJ2, RCJ3, RCJ4, RCJ5, RCJ6, RCJ7 };
+const uint8_t pinJ[8] = { 15, 25, 18, 19, 20, 21, 16, 36 };
+// const uint8_t pinMotor[4][2] = { { M1A, M1B }, { M2A, M2B }, { M3A, M3B }, { M4A, M4B } };
+const uint8_t pinMotor[4][2] = { { 7, 6 }, { 1, 0 }, { 3, 2 }, { 5, 4 } };
 
 WiFiServer webserver(80); // webserver at port 80
 char *httpRequestURL; // HTTP request from client
