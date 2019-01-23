@@ -123,14 +123,19 @@ form input {
 	}
 	
 	#slidersright {
-		display: none; 
+		// FIXME
+		display: block;
+		// display: none; 
 		position: absolute;
 		right: 0;
 		top: calc(50vh - 125px); 
 	}
 	
 	#crosscontrols {
-		display: block; 
+		// FIXME
+		display: none;
+		// FIXME
+		// display: block; 
 		position: absolute;
 		right: 0;
 		top: calc(50vh - 125px); 
@@ -371,7 +376,7 @@ var sliders = {
 			invert : 1.0,
 			center : "Neutral",
 			cc : "black",
-			display : "block" },
+			display : "none" },
 		{ 	name : "sliders2",
 			text : "Servo R",
 			type: "servo",
@@ -385,7 +390,7 @@ var sliders = {
 			invert : 1.0,
 			center : "Neutral",
 			cc : "black",
-			display : "block" },
+			display : "none" },
 		{ 	name : "sliderm1",
 			text : "Motor 1",
 			type: "motor",
@@ -441,7 +446,7 @@ var sliders = {
 			invert : 1.0,
 			center : "STOP",
 			cc : "red",
-			display : "none" },
+			display : "block" },
 		{ 	name : "slidersw1",
 			text : "Switch 1",
 			type: "motor",
@@ -479,6 +484,8 @@ function wireTouch() {
 	wireStop();
 	wireOrientation();
 	showSettings();
+	// FIXME
+	document.getElementById("crosscontrols").style.display = "none";
 	if(!upTimer) upTimer = setInterval(countUp, 100); 
 	console.log(navigator.language); 
 }
@@ -1301,12 +1308,12 @@ function sendToServer(){
 				</fieldset>
 				<fieldset id="uisettings">
 					<legend>User interface</legend>
-					<input type="radio" name="joystick" onClick="showJoyStick('caterpillar');" checked>Show joystick (M1 and M3)</input><br />
+					<input type="radio" name="joystick" onClick="showJoyStick('caterpillar');">Show joystick (M1 and M3)</input><br />
 					<input type="radio" name="joystick" onClick="showJoyStick('car');">Show joystick (M1 and servo 1)</input><br />
-					<input type="radio" name="joystick" onClick="showJoyStick('sliders');" class="slidersonly">Show two sliders</input><br />
+					<input type="radio" name="joystick" onClick="showJoyStick('sliders');" class="slidersonly" checked>Show two sliders</input><br />
 					<input type="checkbox" onClick="toggleSliders(this);" class="sliderm1" checked>Show slider M1</input><br />
 					<input type="checkbox" onClick="toggleSliders(this);" class="sliderm3" checked>Show slider M3</input><br />
-					<input type="checkbox" onClick="toggleSliders(this);" class="sliderm4">Show slider M4</input><br />
+					<input type="checkbox" onClick="toggleSliders(this);" class="sliderm4" checked>Show slider M4</input><br />
 					<input type="checkbox" onClick="toggleSliders(this);" class="sliderm2">Show slider M2 (no PWM!)</input><br />
 					<input type="checkbox" onClick="toggleSliders(this);" class="slidersw1" checked>Show slider S1</input><br />
 					<input type="checkbox" onClick="toggleSliders(this);" class="sliders1" checked>Show slider servo 1</input><br />

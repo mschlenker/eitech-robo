@@ -11,18 +11,18 @@
 
 //#define DEBUG 1 // enable debug output
 
-// #define M1_INVERT // invert direction of M1/right
-#define M3_INVERT // invert direction of M2/left
+#define M1_INVERT // invert direction of M1/right
+// #define M3_INVERT // invert direction of M2/left
 
 #define IS_ACCESS_POINT 1 // 0 or 1
 
 #if IS_ACCESS_POINT == 1
-  char ssid[] = "robby4";   // AP name
+  char ssid[] = "eitechrobo";   // AP name
   char pass[] = "";             // no AP password (open AP)
   //char pass[] = "1234567890";   // AP password
 #else
-  char ssid[] = "pinguinbaendiger"; // your network SSID (name)
-  char pass[] = "8831769357215102";  // your network password
+  char ssid[] = "EitechRoboDemo"; // your network SSID (name)
+  char pass[] = "Nuremberg2019";  // your network password
 #endif
 
 // #define MDNS_SUPPORT // uncomment for MDNS support
