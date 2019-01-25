@@ -14,7 +14,7 @@
 #define M1_INVERT // invert direction of M1/right
 // #define M3_INVERT // invert direction of M2/left
 
-#define IS_ACCESS_POINT 1 // 0 or 1
+#define IS_ACCESS_POINT 0 // 0 or 1
 
 #if IS_ACCESS_POINT == 1
   char ssid[] = "eitechrobo";   // AP name
