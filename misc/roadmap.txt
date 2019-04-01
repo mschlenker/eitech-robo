@@ -1,0 +1,57 @@
+
+
+Evaluierung Webseite vs. "Progressive Web Application" vs. App
+
+Modell Webseite, bei den Praxistests traten Probleme auf:
+
+* Keine statische Positionierung von Elementen möglich, insbesondere Apple unterbindet seit iOS 9 statische Positionierung, damit möglichst viel Fläche für Seiteninhalte (Nutzdaten) zur Verfügung steht.
+* Große Unterschiede beim Viewport (Browser optimieren eben auf Lektüre von Text)
+* Panning und Auswahl wird oft unbewußt getriggert
+* Adresszeile mal eingeblendet, mal ausgeblendet
+* Browser sendet im Hintergrund mitunter weiter
+* Mehrfachklicks und lange Klicks oft vom UI interpretiert und nicht von der Webseite
+
+Lösungsversuche: 
+
+Flex-Positionierung, Overlays helfen teilweise, sind aber nicht komplett befriedigend
+
+Modell PWA ("Progressive oder Persistent Web Application"):
+
+* Eine Webseite wird lokal auf dem Smartphone gecachet, erhält ein eigenes Icon, zeigt keine Adressleiste an, fixe Positionierung teilweise erlaubt, Panning und Auswahl kann teilweise abgeschaltet werden, d.h. im Hintergrund läuft weiter der Browser, aber die Webseite versucht, sich ein wenig mehr wie eine App zu verhalten
+
+ABER:
+
+* Unter iOS erst ab Version 12 verfügbar
+* Ohne HTTPS sperriger, bald wahrscheinlich nur HTTPS möglich 
+
+Fazit PWA: Toll für Anwendungen, die eher informationslastig sind und sich komplett im "echten" Internet abspielen, beispielweise Einkaufszettel-Apps. Absehbarer Zwang zu HTTPS ist Ausschlusskriterium!
+
+Vollständige App:
+
+* Volle Freiheit im Layout
+* Keine Panning- (zoomen/verschieben) und Auswahl-Problematik
+* Schneller Start und sofortige Reaktion
+* Kein HTTPS-Zwang
+* Auf andere Kommunikationskanäle (BLE) ausdehnbar
+
+ABER - hier nicht wild:
+
+* iOS muss über Apples Store angeboten werden
+* Bislang nur iOS und Android zuverlässig unterstützt
+
+Lösungsversuch, der begrenzte Ressourcen einbezieht:
+
+* Definition eines REST-API, das über einen längeren Zeitraum hin konsistent sein soll, auch Sensoren einbindet und wohldokumentiert für eigene Experimente bereitstehen wird, welche Sensoren binden wir in erste Images ein (Infrarot, Ultraschall, Kompass, analog generisch)? 
+* Echte Android- und iOS-App, kann mit Flutter auf einer Codebasis entstehen
+* Windows-10-App mit Flutter/FeatherApps in greifbarer Nähe
+* Lokal ausgeliefertes Webinterface für Smartphones wird in die zweite Reihe verschoben, stattdessen drei Links (mit Icon): iOS- und Android-App, sowie Netzwerkeinstellungen setzen, kleiner Link zum bisherigen Interface
+* Lokal ausgeliefertes Webinterface für PC kann etwas aufwendiger sein, verschiedene Schieberegler zum Test, Anzeige von Sensorwerten, Einstellungen ändern
+
+BONUS:
+
+* REST-API erlaubt es bspw. mittelfristig einen Schwarm von Robotern interagieren zu lassen
+* REST-API ermöglicht Entwicklung in verschiedensten Sprachen, ohne direkt auf dem Microcontroller programmieren zu müssen
+* Flutter erlaubt Anwendungen für iOS und Android mit einer Codebasis
+
+
+
