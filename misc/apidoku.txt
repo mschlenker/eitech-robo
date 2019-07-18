@@ -39,4 +39,23 @@ Set certain sensors at j1 to j7 as analog input
 
 /setmax/m<int>/<voltage>
 
-Set maximum output voltage for motor ports and s1, to be calculated relative to the 
+Set maximum output voltage for motor ports and s1, to be calculated relative to the battery voltage 
+
+
+
+
+
+Set analog 
+
+Connect endstops to motors 
+
+Set Neopixel program
+
+Get DHT 22
+
+Get freq (Anemometer) 
+
+
+
+
+
