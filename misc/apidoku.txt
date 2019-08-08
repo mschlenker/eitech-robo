@@ -9,9 +9,11 @@ format JSON
 
 Stop everything!
 
-/setmotor/<int>/<int>/<int>/<int>/<int>/<int>/<int>/<int>/<int>
+/setmotor/<int>/<int>/<int>/<int>
 
-Set all motors, integer values for first and second bit of each motor 
+Set all motors, integer values as positive or negative speed
+
+/setswitch/<int>
 
 /setwifi/<mode>/<essid>/<wpakey>
 
@@ -24,6 +26,10 @@ Get current WIFI settings plus list of available networks
 /getdistance/<timeout>/ 
 
 Read an HC-SR04 connected to the serial port
+
+/setmode/j<int>/type
+
+Set the modes of the ports 
 
 /setservo/j<int>/<int>[/j<int>/<int>]
 
