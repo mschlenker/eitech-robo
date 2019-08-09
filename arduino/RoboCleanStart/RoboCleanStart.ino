@@ -2,6 +2,7 @@
 #include <WiFiMDNSResponder.h>
 #include <SPIMemory.h>
 #include <Servo.h>
+#include <SimpleDHT.h>
 
 // #define SERIAL_DEBUG
 
@@ -15,6 +16,10 @@
 #define J3 18
 #define J4 19
 #define J5 20
+#define J6 21
+#define J7 16
+
+#define DHT_PIN 25 // DHT on J2
 
 #define OUTPUT_BUFFER 4096
 
@@ -30,6 +35,7 @@ unsigned long lastAnemoRollback = 0;
 
 Servo servoL;
 Servo servoR; 
+SimpleDHT22 dht22;
 
 SPIFlash flash(24);
 WiFiServer webserver(80); // webserver at port 80
@@ -43,13 +49,13 @@ char outBuff[OUTPUT_BUFFER];
 // maximum voltage for M1-M4 and S1
 // int maxVoltage[5] = { 0, 0, 0, 0, 0 };
 int motorSpeed[5] = { 0, 0, 0, 0, 0 };
-int jpins[5] = { J1, J2, J3, J4, J5 }; 
+int jpins[5] = { J1, J2, J3, J4, J7 }; 
 const uint8_t pinMotor[4][2] = { { RM1A, RM1B }, { RM2A, RM2B }, { RM3A, RM3B }, { RM4A, RM4B } };
 
 // char apName[12] = "eitech-robo";
 
 struct settings {
-  char fwVersion[14] = "20190803-1430";
+  char fwVersion[14] = "20190809-1045";
   bool isAp = true; 
   char apSSID[32] = "1234567890123456789012345678901";
   char apPSK[64] = "123456789012345678901234567890123456789012345678901234567890123";
@@ -117,9 +123,13 @@ void changeMode() {
     } else if (defSettings.pinMode[i] == 1) {
       pinMode(jpins[i], INPUT); 
     } else if (defSettings.pinMode[i] == 2) {
-      if (i == 0) {
+      if (i == 4 || i == 1) {
+        // J7 configured as interrupt pin for anemometer and similar
         pinMode(jpins[i], INPUT_PULLUP); 
-        attachInterrupt(digitalPinToInterrupt(jpins[i]), anemoCount, FALLING);
+        attachInterrupt(jpins[i], anemoCount, FALLING);
+      } else if (i == 1) {
+        // J2 setup for DHT22
+        pinMode(jpins[i], INPUT); 
       }
     }
   }
@@ -342,6 +352,26 @@ void getNet() {
   jsonReply += "\",\n";
 }
 
+void getDht() {
+  float temperature = 0;
+  float humidity = 0;
+  int err = SimpleDHTErrSuccess;
+  if ((err = dht22.read2(DHT_PIN, &temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
+    Serial.print("Read DHT22 failed, err="); Serial.println(err);delay(2000);
+    jsonReply += "\"dhterror\" : true";
+    return;
+  }
+  #ifdef SERIAL_DEBUG
+  Serial.print("Sample OK: ");
+  Serial.print((float)temperature); Serial.print(" *C, ");
+  Serial.print((float)humidity); Serial.println(" RH%");
+  #endif
+  jsonReply += "\"dhterror\" : false, \"temperature\" : ";
+  jsonReply += temperature;
+  jsonReply += " , \"humidity\" : ";
+  jsonReply += humidity;
+}
+
 bool setMaxVoltage(String outport, String volt) {
   bool retcode = false;
   if (outport == "m1" || outport == "M1") {
@@ -536,9 +566,8 @@ void setup() {
   backupSettings = defSettings; 
   pinMode(DIST_TRIGGER, OUTPUT);
   pinMode(DIST_RECEIVE, INPUT);
-  changeMode(); 
-  servoL.attach(16);
-  servoR.attach(21);
+  servoL.attach(J5);
+  servoR.attach(J6);
   setServoPos(0, 90);
   setServoPos(1, 90);
   // init pins
@@ -592,6 +621,7 @@ void setup() {
   }
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(PIN_A2, INPUT);
+  changeMode(); 
   #ifdef SERIAL_DEBUG
   Serial.println(backupSettings.fwVersion);
   Serial.println(flashSettings.fwVersion);
@@ -677,10 +707,16 @@ void loop() {
     anemoRpm = anemoTicks * 6; 
     anemoTicks = 0;
     lastAnemoRollback = uptime;
+    #ifdef SERIAL_DEBUG
+    Serial.println(anemoRpm); 
+    #endif
   } else if (uptime - lastAnemoRollback > 30000) {
     anemoRpm = anemoTicks * 2; 
     anemoTicks = 0;
     lastAnemoRollback = uptime;
+    #ifdef SERIAL_DEBUG
+    Serial.println(anemoRpm); 
+    #endif
   }
   if (client) {
     // an http request ends with a blank line
@@ -874,14 +910,7 @@ void loop() {
             } else if (httpGetResource(0) == "setanalog") {
               // Serial.println("Setting analogue output on J1 to J5");
               for (int i=0; i<5; i++) {
-                if ( (i<2 || i==4) && defSettings.pinMode[i] == 0) {
-                  if (httpGetResource(i+1).toInt() > 127)
-                    digitalWrite(jpins[i], HIGH);
-                  else
-                    digitalWrite(jpins[i], LOW);
-                } else {
                   analogWrite(jpins[i], httpGetResource(i+1).toInt()); 
-                }
               }
               jsonReply = "{ ";
               getVoltage();
@@ -905,7 +934,7 @@ void loop() {
                 idx = 2;
               } else if (httpGetResource(1) == "j4" || httpGetResource(1) == "J4") {
                 idx = 3;
-              } else if (httpGetResource(1) == "j5" || httpGetResource(1) == "J5") {
+              } else if (httpGetResource(1) == "j7" || httpGetResource(1) == "J7") {
                 idx = 4;
               }
               if (idx>-1 && defSettings.pinMode[idx] == 1) {
@@ -935,8 +964,37 @@ void loop() {
               }
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "getdistance") {
+            } else if (httpGetResource(0) == "getrpm") {
               // Serial.println("Get the distance of HC-SR04");
+              // modes of port: 0 output
+              //                1 input
+              //                2 interrupt 
+              // Serial.println("Changing mode of Port");
+              jsonReply = "{ \"rpm\" : ";
+              jsonReply += anemoRpm;
+              jsonReply += " ,\n"; 
+              getVoltage();
+              jsonReply += " }\n";
+              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              for ( int i = 0 ; i < jsonReply.length() ; i++) {
+                outBuff[i] = jsonReply.charAt(i);
+                // client.write(jsonReply.charAt(i));
+              }
+              client.write(outBuff);
+              break;
+            } else if (httpGetResource(0) == "getdht") {
+              jsonReply = "{ ";
+              getDht();
+              jsonReply += " ,\n"; 
+              getVoltage();
+              jsonReply += " }\n";
+              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              for ( int i = 0 ; i < jsonReply.length() ; i++) {
+                outBuff[i] = jsonReply.charAt(i);
+                // client.write(jsonReply.charAt(i));
+              }
+              client.write(outBuff);
+              break;
             }
             // Serial.println(httpRequestURL);
             client.write("HTTP/1.0 200 OK\nContent-type: text/plain\n\nHallo Welt!\n\n");
