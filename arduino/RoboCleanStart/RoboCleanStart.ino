@@ -55,7 +55,7 @@ const uint8_t pinMotor[4][2] = { { RM1A, RM1B }, { RM2A, RM2B }, { RM3A, RM3B },
 // char apName[12] = "eitech-robo";
 
 struct settings {
-  char fwVersion[14] = "20190809-1045";
+  char fwVersion[14] = "20190812-1145";
   bool isAp = true; 
   char apSSID[32] = "1234567890123456789012345678901";
   char apPSK[64] = "123456789012345678901234567890123456789012345678901234567890123";
@@ -235,7 +235,7 @@ void printSettings(settings sets, char description[16]) {
   jsonReply += sets.apSSID;
   jsonReply += "\", \"";
   jsonReply += sets.apPSK; 
-  jsonReply += "\" ],\n \"infraClient\" [ \"";
+  jsonReply += "\" ],\n \"infraClient\" : [ \"";
   jsonReply += sets.infSSID;
   jsonReply += "\", \"";
   jsonReply += sets.infPSK;
@@ -287,7 +287,11 @@ void listNetworks() {
     jsonReply += WiFi.RSSI(thisNet);
     jsonReply += " , \n \"enctype\" : ";
     jsonReply += WiFi.encryptionType(thisNet);
-    jsonReply += " },\n ";
+    if (thisNet < numSsid-1) {
+      jsonReply += " },\n ";
+    } else { 
+      jsonReply += " }\n ";
+    }
   }
   jsonReply += " ] ,\n \"isap\" : ";
   jsonReply += defSettings.isAp;
@@ -410,7 +414,7 @@ void getMaxVoltages() {
 
 void setSwitch(int value) {
   int rawVoltage;
-  int absMax;
+  int absMax = 255;
   rawVoltage  = analogRead(PIN_A2);
   // Serial.println(rawVoltage);
   int calcVoltage = ( rawVoltage * ( 62 + 14 ) * 33 / 1023 / 14 );
@@ -566,8 +570,8 @@ void setup() {
   backupSettings = defSettings; 
   pinMode(DIST_TRIGGER, OUTPUT);
   pinMode(DIST_RECEIVE, INPUT);
-  servoL.attach(J5);
-  servoR.attach(J6);
+  servoL.attach(J6);
+  servoR.attach(J5);
   setServoPos(0, 90);
   setServoPos(1, 90);
   // init pins
@@ -741,7 +745,7 @@ void loop() {
           if (httpSplitRequest(httpRequest, httpRequestLen)) {
             if (httpGetResource(0) == "stop") {
               stopEverything();
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -759,7 +763,7 @@ void loop() {
               jsonReply = "{ ";
               getVoltage();
               jsonReply += " }\n";
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -773,7 +777,7 @@ void loop() {
               jsonReply = "{ ";
               getVoltage();
               jsonReply += " }\n";
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -786,7 +790,7 @@ void loop() {
               jsonReply = "{ ";
               getVoltage();
               jsonReply += " }\n";
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -798,7 +802,7 @@ void loop() {
               jsonReply = "{ ";
               getVoltage();
               jsonReply += " }\n";
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -812,7 +816,7 @@ void loop() {
               jsonReply += ",\n";
               getVoltage();
               jsonReply += " }\n";
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -831,7 +835,7 @@ void loop() {
               getNet();
               getVoltage();
               jsonReply += " }\n";
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -845,7 +849,7 @@ void loop() {
               setMotorSpeed(3, httpGetResource(3).toInt());
               setMotorSpeed(4, httpGetResource(4).toInt());
               getMaxVoltages();
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -856,7 +860,7 @@ void loop() {
               // Serial.println("Setting motors");
               setSwitch(httpGetResource(1).toInt());
               getMaxVoltages();
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -869,19 +873,17 @@ void loop() {
               jsonReply = "{ ";
               getVoltage();
               jsonReply += " }\n";
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
               }
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "setwifi") {
-              // Serial.println("Setting WiFi parameters");
             } else if (httpGetResource(0) == "getwifi") {
               // Serial.println("Getting WiFi parameters and networks");
               listNetworks();
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -900,7 +902,7 @@ void loop() {
               jsonReply = "{ ";
               getVoltage();
               jsonReply += " }\n";
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -915,7 +917,7 @@ void loop() {
               jsonReply = "{ ";
               getVoltage();
               jsonReply += " }\n";
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -947,7 +949,7 @@ void loop() {
               jsonReply += "\" ,\n";
               getVoltage();
               jsonReply += " }\n";
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -957,7 +959,7 @@ void loop() {
             } else if (httpGetResource(0) == "setmax") {
               // Serial.println("Setting maximum voltage of motors M1 to m4");
               setMaxVoltage(httpGetResource(1), httpGetResource(2));
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -975,7 +977,7 @@ void loop() {
               jsonReply += " ,\n"; 
               getVoltage();
               jsonReply += " }\n";
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));
@@ -988,7 +990,7 @@ void loop() {
               jsonReply += " ,\n"; 
               getVoltage();
               jsonReply += " }\n";
-              client.write("HTTP/1.0 200 OK\nContent-type: application/json\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
                 // client.write(jsonReply.charAt(i));

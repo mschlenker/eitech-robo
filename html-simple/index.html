@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns="https://www.w3.org/1999/xhtml"
+	xmlns:epub="https://www.idpf.org/2007/ops"
+	xml:lang="de-DE" lang="de-DE">
+	<head>
+		<meta charset="utf-8" />
+		<script>
+			function pageInit() {
+				var cpage = document.getElementById("controlpage");
+				var ctab = document.getElementById("tabbox").getElementsByTagName("div")[0].getElementsByTagName("div")[1];
+				var ntab = document.getElementById("tabbox").getElementsByTagName("div")[0].getElementsByTagName("div")[0];
+				var ffields = document.getElementsByClassName("infinput");
+				for (var i = 0; i < ffields.length; i++) {
+					ffields[i].disabled = true; 
+				}
+				cpage.style.display = "none";
+				ctab.style.backgroundColor = "#aeddf0";
+				wirelinks();
+				console.log(navigator.userAgent);
+				console.log(navigator.language);
+				console.log(navigator.platform);
+			}
+			
+			// wire imprint link
+			function wirelinks() {
+				var implink = document.getElementById("tabbox").getElementsByTagName("div")[0].getElementsByTagName("div")[1].children[0];
+				var homelink = document.getElementById("tabbox").getElementsByTagName("div")[0].getElementsByTagName("div")[0].children[0];
+				var apradio = document.getElementById("accesspoint");
+				var infradio = document.getElementById("client");
+				implink.onclick = function() {
+					document.getElementById("tabbox").children[0].children[1].style.backgroundColor = "whitesmoke";
+					document.getElementById("tabbox").children[0].children[0].style.backgroundColor = "#aeddf0";
+					document.getElementById("controlpage").style.display = "block";
+					document.getElementById("mainpage").style.display = "none";
+					return false; 
+				}
+				homelink.onclick = function() {
+					document.getElementById("tabbox").children[0].children[0].style.backgroundColor = "whitesmoke";
+					document.getElementById("tabbox").children[0].children[1].style.backgroundColor = "#aeddf0";
+					document.getElementById("controlpage").style.display = "none";
+					document.getElementById("mainpage").style.display = "block";
+					return false; 
+				}
+				apradio.onclick = function() {
+					console.log("Switch to accesspoint");
+					var ffields = document.getElementsByClassName("infinput");
+					for (var i = 0; i < ffields.length; i++) {
+						ffields[i].disabled = true; 
+					}
+					var xfields = document.getElementsByClassName("apinput");
+					for (var i = 0; i < xfields.length; i++) {
+						xfields[i].disabled = false; 
+					}
+				}
+				infradio.onclick = function() {
+					console.log("Switch to infrastructure");
+					var ffields = document.getElementsByClassName("infinput");
+					for (var i = 0; i < ffields.length; i++) {
+						ffields[i].disabled = false; 
+					}
+					var xfields = document.getElementsByClassName("apinput");
+					for (var i = 0; i < xfields.length; i++) {
+						xfields[i].disabled = true; 
+					}
+				}
+			}
+			
+		</script> 
+		<style>
+body {
+	margin: 0px;
+	padding: 0px;
+	font-family: sans-serif;
+	background-color: whitesmoke;
+}
+
+.center {
+	margin: 0px;
+	padding: 0px;
+	margin-left: auto;
+	margin-right:auto;
+	width: 350px;
+}
+
+#tabbox {
+	margin: 0px;
+	padding: 0px;
+	width: 100%;
+	background-color: #006bb3; 
+	/* border-width: 1px;
+	border-color: blue;
+	border-style: solid; */
+	height: 45px;
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	z-index: 50; 
+}
+
+div#tabbox div.center div {
+	text-align: center;
+	width: 43%;
+	float: left;
+	height: 30px;
+	margin:0px;
+	margin-left: 3px;
+	margin-right: 3px;
+	margin-top: 4px;
+	/* background-color: #aeddf0; */
+	background-color: whitesmoke; 
+	padding-top: 11px; 
+	border-radius: 0px;
+	border-top-left-radius: 8px;
+	border-top-right-radius: 8px;
+	font-weight: bold; 
+}
+
+a:link, a:hover, a:visited, a:active {
+	color: black;
+	text-decoration: underline; 
+}
+
+a:hover {
+	color: blue;
+	text-decoration: none; 
+}
+
+div#tabbox div.center div a:link, div#tabbox div.center div a:hover,  
+div#tabbox div.center div a:visited, div#tabbox div.center div a:active {
+	color: black;
+	text-decoration: none; 
+}
+
+#mainpage, #controlpage {
+	margin-top: 70px; 
+	margin-left: auto;
+	margin-right: auto; 
+	margin-bottom: 60px; 
+	max-width: 800px;
+	background-color: whitesmoke; 
+}
+
+#inetmobile {
+	display: none; 
+}
+
+table.qrstuff {
+	width: 100%; 
+}
+
+table.qrstuff, table.qrstuff th, table.qrstuff td {
+	border: none;
+}
+
+#deskview { display: block; }
+#mobileview { display: none; }
+
+/* Tablet, große Smartphones im Querformat */ 
+@media (max-device-width: 960px) and (orientation: landscape), (min-device-width: 600px) and (orientation: portrait) {
+
+}
+
+/* Smartphone im Hochformat */
+@media (max-device-width: 599px) and (orientation: portrait) {
+	#deskview { display: none; }
+	#mobileview { display: block; }
+}
+		</style>
+		<title>Eitech Robo Controller</title>
+	</head>
+	<body onload="pageInit();">
+		<div id="tabbox">
+			<div class="center">
+				<div><a href="#network">Netzwerk</a></div>
+				<div><a href="#controller">Steuerung</a></div>
+			</div>
+		</div>
+		<div id="mainpage">
+			<h3>Netzwerk-Einstellungen</h3>
+			<p>
+				<form>
+					<input type="radio" id="accesspoint" name="netmode" />
+					<label for="accesspoint">Accesspoint</label><br />
+					<label for="apname">ESSID:</label><br />
+					<input class="apinput" type="text" name="apname" size="64" value="eitech-robo"/><br />
+					<input type="radio" id="client" name="netmode" />
+					<label for="client">Client</label><br />
+					<label for="infname">ESSID:</label><br />
+					<select name="infname" class="infinput">
+						<option>pinguinbaendiger</option>
+					</select><br />
+					<label for="appsk">PSK:</label><br />
+					<input class="infinput" type="text" name="infpsk" size="64" /><br />
+					<input type="submit" name="Submit" />
+				</form>
+			</p>
+			<div id="mobileview">
+				<div id="inetmobile">
+					<h3>Laden Sie die App herunter</h3>
+					<p style="text-align:center;">
+						<a href="https://jmp.eitech-robotics.de/23"><img src="https://static.eitech-robotics.de/img/iosappstore.png" width="300" /></a>
+					</p>
+					<p style="text-align:center;">
+						<a href="https://jmp.eitech-robotics.de/24"><img src="https://static.eitech-robotics.de/img/playstoreblk.png" width="300" /></a>
+					</p>
+				</div>
+				<div id="noinetmobile">
+					<h3>Keine Internetverbindung</h3>
+					<p>Momentan ist keine Internetverbindung vorhanden. Suchen Sie im Google Play Store oder im Apple App Store die App "Eitech Robo Controller" und installieren Sie diese um den Roboter Controller fernzusteuern.</p>
+				</div>
+			</div>
+			<div id="deskview">
+				<h3>Apps, Dokumentation und Entwicklung</h3>
+				<p>
+					Sie können den Eitech Robo Controller per App fernsteuern, über ein REST-API ansprechen oder mit der Arduino-Entwicklungsumgebung programmieren. 
+				</p>
+				<ul>
+					<li><a href="https://jmp.eitech-robotics.de/23" target="_blank">Eitech Robo Controller App im iOS App Store</a></li>
+					<li><a href="https://jmp.eitech-robotics.de/24" target="_blank">Eitech Robo Controller App im Google Play Store</a></li>
+					<li><a href="https://jmp.eitech-robotics.de/25" target="_blank">Arduino-Entwicklungsumgebung für Eitech Robo Controller</a></li>
+					<li><a href="https://jmp.eitech-robotics.de/26" target="_blank">API-Dokumentation des REST-API Eitech Robo Controller</a></li>
+				</ul>
+				<p style="text-align:center;">
+				<table class="qrstuff">
+					<tr>
+					<td><img src="https://static.eitech-robotics.de/img/qr23.png" width="300" /></td>
+					<td></td>
+					<td><img src="https://static.eitech-robotics.de/img/qr24.png" width="300" /></td>
+					</tr>
+					<td><a href="https://jmp.eitech-robotics.de/23"><img src="https://static.eitech-robotics.de/img/iosappstore.png" width="300" /></a></td>
+					<td></td>
+					<td><a href="https://jmp.eitech-robotics.de/24"><img src="https://static.eitech-robotics.de/img/playstoreblk.png" width="300" /></a></td>
+					</tr>
+				</table>
+				</p>
+			</div>
+		</div>
+		<div id="controlpage">
+			Control Page
+		</div>
+	</body>
+	<script src="https://static.eitech-robotics.de/js/robo-20190901.js"></script>
+</html>

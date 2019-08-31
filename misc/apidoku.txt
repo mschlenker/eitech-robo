@@ -1,67 +1,222 @@
 
 /get/
 
-Get all settings, sensor values, WLAN mode, current drive status, ID of governing device
+Get all settings, WLAN mode and pin modes, use /write to write current settings as flash settings to SPI memory!
 
-format JSON
+Example: 
+
+curl -v http://10.76.23.155/get
+
+{  "currentSettings" : {
+"version" : "20190809-1045 ", 
+"isAp" : 0,
+ "accessPoint" : [ "eitech-robo", "123456789012345678901234567890123456789012345678901234567890123" ],
+ "infraClient" [ "pinguinbaendiger", "8831769357215102" ],
+ "maxVoltage" : [ 0, 0, 0, 0, 0 ],
+ "motorInvert" : [ 0, 0, 0, 0 ],
+ "servoInvert" : [ 0, 0 ],
+ "pinMode" : [ 0, 0, 0, 0, 0 ] }
+, 
+ "flashSettings" : {
+"version" : "20190809-1045 ", 
+"isAp" : 0,
+ "accessPoint" : [ "eitech-robo", "123456789012345678901234567890123456789012345678901234567890123" ],
+ "infraClient" [ "pinguinbaendiger", "8831769357215102" ],
+ "maxVoltage" : [ 0, 0, 0, 0, 0 ],
+ "motorInvert" : [ 0, 0, 0, 0 ],
+ "servoInvert" : [ 0, 0 ],
+ "pinMode" : [ 0, 0, 0, 0, 0 ] }
+, 
+ "defaultSettings" : {
+"version" : "20190809-1045 ", 
+"isAp" : 1,
+ "accessPoint" : [ "eitech-robo", "123456789012345678901234567890123456789012345678901234567890123" ],
+ "infraClient" [ "1234567890123456789012345678901", "123456789012345678901234567890123456789012345678901234567890123" ],
+ "maxVoltage" : [ 0, 0, 0, 0, 0 ],
+ "motorInvert" : [ 0, 0, 0, 0 ],
+ "servoInvert" : [ 0, 0 ],
+ "pinMode" : [ 0, 0, 0, 0, 0 ] }
+, 
+"mac" : "f8:f0:5:a9:cd:eb", "signal" : -64, "addr" : "10.76.23.155", "fwInstalled" : "19.5.4", "fwExpected" : "19.5.4",
+ "vbat" : 4.79 }
 
 /stop/
 
 Stop everything!
 
-/setmotor/<int>/<int>/<int>/<int>
+Example: 
 
-Set all motors, integer values as positive or negative speed
+curl -v http://10.76.23.155/stop
 
-/setswitch/<int>
+{ "stopped" : 1, 
+ "vbat" : 4.78 }
 
-/setwifi/<mode>/<essid>/<wpakey>
+/getwifi
 
-Mode is either AP or infrastructure, ESSID and WPA2Key are Base64url encoded to allow for special characters
+List all WIFI networks in your neighborhood and show the current connection:
 
-/getwifi/
+{ "networks" : [  { "ssid" : "pinguinbaendiger" , 
+ "signal" : -61 , 
+ "enctype" : 2 },
+  { "ssid" : "parkdeckV2.4" , 
+ "signal" : -84 , 
+ "enctype" : 2 },
+  { "ssid" : "dc_XjP1jujH" , 
+ "signal" : -90 , 
+ "enctype" : 2 },
+  { "ssid" : "24-7ACAB" , 
+ "signal" : -90 , 
+ "enctype" : 2 },
+  { "ssid" : "WLAN-10F332" , 
+ "signal" : -70 , 
+ "enctype" : 2 },
+  { "ssid" : "DIRECT-0D-HP OfficeJet 6950" , 
+ "signal" : -92 , 
+ "enctype" : 2 },
+  { "ssid" : "DIRECT-5E-HP OfficeJet Pro 8710" , 
+ "signal" : -91 , 
+ "enctype" : 2 },
+  { "ssid" : "" , 
+ "signal" : -45 , 
+ "enctype" : 1 },
+  { "ssid" : "Buero" , 
+ "signal" : -88 , 
+ "enctype" : 2 },
+  { "ssid" : "" , 
+ "signal" : -87 , 
+ "enctype" : 2 },
+  { "ssid" : "DIRECT-R2BC-TS5000series" , 
+ "signal" : -87 , 
+ "enctype" : 2 },
+  { "ssid" : "wwu_gast" , 
+ "signal" : -86 , 
+ "enctype" : 2 }
+  ] ,
+ "isap" : 0, "ssid" : "pinguinbaendiger", "mac" : "f8:f0:5:a9:cd:eb", "signal" : -59, "addr" : "115523.76.", "fwInstalled" : "19.5.4", "fwExpected" : "19.5.4", 
+ "vbat" : 4.78 }
 
-Get current WIFI settings plus list of available networks
+# TODO: Fix address as in /get
 
-/getdistance/<timeout>/ 
+/wificonnect/<SSID>/<PSK>
 
-Read an HC-SR04 connected to the serial port
+Connects to a certain WIFI network. 
 
-/setmode/j<int>/type
+curl -v http://10.76.23.155/wificonnect/pinguinbaendiger/12345678901234567890
 
-Set the modes of the ports 
+Closes the connection!
 
-/setservo/j<int>/<int>[/j<int>/<int>]
+/switchnet
 
-Set an arbitary servo connected to j1 to j4 to a certain angle
+curl -v http://10.76.23.155/switchnet
 
-/setanalog/j<int>/<int>[/j<int>/<int>]
+Switches between AP and infrastructure mode (or vice versa). Same can be acomplished by pressing the SW button for about 7 seconds. 
 
-Set an arbitary analogue output on j1 to j7
+/write
 
-/getanalog/j<int>[/j<int>]
+Writes settings to the SPI memory, used implicitly when setting network parameters, use manually in all other settings.
 
-Set certain sensors at j1 to j7 as analog input
+/timeout
 
-/setmax/m<int>/<voltage>
+curl -v http://10.76.23.155/timeout/1000
 
-Set maximum output voltage for motor ports and s1, to be calculated relative to the battery voltage 
+Set the timeout (max time between two HTTP requests). Default is 500ms. If requests are slower, all motors will stop, S1 will be set to 0. Servos will move to neutral. Set timeout to 0 to disable completely.
 
+TODO: Store timeout
 
+/getdistance
 
+Get the distance of an HC-SR04 connected to the UART (TX > Trig, RX > Echo). Timeout specified in microseconds. 10000 microseconds can be used to detect objects approx. 1.7m or closer. The answer ist the raw value in microseconds the sound travelled from the sensor to the object and back. Depending on air pressure and temperature sound typically travels about 320 to 355m/s in air. Here the object detected is in about 2m distance.
 
+curl -v http://10.76.23.155/getdistance/10000
 
-Set analog 
+{  "obstacleDistance" : 11932,
+ "vbat" : 4.79 }
+ 
+/setmotor
 
-Connect endstops to motors 
+Set the speeds of all four motors, values from -255 to 255 are accepted. Remember that the current defaults allow no PWM on M2!
 
-Set Neopixel program
+curl -v http://10.76.23.155/setmotor/-180/255/60/-80
 
-Get DHT 22
+{ "maxvoltages" : [ 
+0, 0, 0, 0, 0, 
+], "motorspeeds" : [ 
+-180, 255, 60, -80, 0, 
+] }
 
-Get freq (Anemometer) 
+/setswitch 
 
+Set S1 PWM from 0 to 255. Only positive values allowed.
 
+curl -v http://10.76.23.155/setswitch/127
 
+{ "maxvoltages" : [ 
+0, 0, 0, 0, 0, 
+], "motorspeeds" : [ 
+0, 0, 0, 0, 127, 
+] }
 
+/setservo
 
+Set both servos to a certain angle. Values from 0 to 180 are accepted. Remember that many servos have a real range of about 270°.
+
+curl -v http://10.76.23.155/setservo/120/60/
+
+/setmode
+
+Set pinmodes. Default 0 is output, 1 is INPUT, 2 is RPM on J7 (anemometer) or DHT22 on J2. 
+
+Example:
+
+curl -v http://10.76.23.155/setmode/0/2/0/1/2
+
+/getanalog
+
+Read analog values on a single pin that is configured as analog input. Values range from 0 to 1023. Reference is the internal 3.3V. Not 5V!
+
+curl -v http://10.76.23.155/getanalog/J4
+
+{ "analogValue" : -1, "pinName" : "j4" ,
+ "vbat" : 4.78 }
+
+Returns -1 if the pin is not configured as input:
+
+{ "analogValue" : -1, "pinName" : "j4" ,
+ "vbat" : 4.78 }
+
+/setmax
+
+Set maximum voltages for M1 to M2 resp. S1. Voltages is calculated relative to input voltage. If input voltage is lower than max voltage, the setting has no effect. Set to zero to disable. Unit is tenths of a volt.
+
+Example:
+
+curl -v http://10.76.23.155/setmax/m1/90
+
+{ "maxvoltages" : [ 
+90, 0, 0, 0, 0, 
+], "motorspeeds" : [ 
+0, 0, 0, 0, 0, 
+] }
+
+/getrpm
+
+Get the RPM of a tachometer or anemometer connected to J7. The pin is configured as INPUT_PULLUP. If more than 25 interrupts occur within 10 seconds the RPM is calculated every 1 seconds, if less or equal than 25 ints, the time frame is 30 seconds. Debounce in hardware.
+
+curl -v http://10.76.23.155/getrpm
+
+{ "rpm" : 0 ,
+ "vbat" : 4.79 }
+
+/getdht
+
+Read a DHT22 connected to J2. Remember that each DHT22 has to be calibrated individually and DHT22 has a limited range. So you usually want to use a NTC to make wider, more precise measurings. 
+
+curl -v http://10.76.23.155/getdht
+
+{ "dhterror" : false, "temperature" : 27.30 , "humidity" : 30.50 ,
+ "vbat" : 4.81 }
+
+In case of error, no temperature or humidity values are returned, so check for "dhterror" first!
+
+{ "dhterror" : true ,
+ "vbat" : 4.79 }
