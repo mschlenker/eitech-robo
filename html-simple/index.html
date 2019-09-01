@@ -5,20 +5,103 @@
 	<head>
 		<meta charset="utf-8" />
 		<script>
+		
+			// keep the JSON file for network settings globally:
+			var netWorkJson;
+			var versionInfo; 
+		
 			function pageInit() {
 				var cpage = document.getElementById("controlpage");
 				var ctab = document.getElementById("tabbox").getElementsByTagName("div")[0].getElementsByTagName("div")[1];
 				var ntab = document.getElementById("tabbox").getElementsByTagName("div")[0].getElementsByTagName("div")[0];
-				var ffields = document.getElementsByClassName("infinput");
-				for (var i = 0; i < ffields.length; i++) {
-					ffields[i].disabled = true; 
-				}
+				// var ffields = document.getElementsByClassName("infinput");
+				// for (var i = 0; i < ffields.length; i++) {
+				// 	ffields[i].disabled = true; 
+				// }
 				cpage.style.display = "none";
 				ctab.style.backgroundColor = "#aeddf0";
+				// wire links
 				wirelinks();
+				// prepare json for networks
+				var reqUrl = "/getwifi";
+				var req = new XMLHttpRequest();
+				req.open("GET", reqUrl);
+				req.responseType = 'json';
+				req.send();
+				req.onload = function() {
+					console.log('JSON loaded!');
+					netWorkJson = req.response;
+					populateList(netWorkJson);
+				}
+				var vreq = new XMLHttpRequest();
+				var vurl ="/get";
+				vreq.open("GET", vurl);
+				vreq.responseType = 'json';
+				vreq.send();
+				vreq.onload = function() {
+					console.log('JSON loaded!');
+					versionInfo = vreq.response;
+					console.log(versionInfo['currentSettings']['version']);
+				}
+				// log some statistics
 				console.log(navigator.userAgent);
 				console.log(navigator.language);
 				console.log(navigator.platform);
+			}
+			
+			function populateList(jsonObj) {
+				var networks = jsonObj['networks']; 
+				var listRoot = document.getElementById("netdropdown");
+				for (var i=0; i<networks.length; i++) {
+					if (networks[i]['ssid'].length > 0) {
+						var ssid = networks[i]['ssid'];
+						// console.log(ssid);
+						var o = document.createElement("option");
+						o.appendChild(document.createTextNode(ssid));
+						listRoot.appendChild(o); 
+					}
+				}
+				// check whether is access point
+				var apradio = document.getElementById("accesspoint");
+				var infradio = document.getElementById("client");
+				if (jsonObj.isAp > 0) {
+					apradio.checked = true;
+					console.log("Switch to accesspoint");
+					var ffields = document.getElementsByClassName("infinput");
+					for (var i = 0; i < ffields.length; i++) {
+						ffields[i].disabled = true; 
+					}
+					var xfields = document.getElementsByClassName("apinput");
+					for (var i = 0; i < xfields.length; i++) {
+						xfields[i].disabled = false; 
+					}
+				} else {
+					infradio.checked = true; 
+					console.log("Switch to infrastructure");
+					var ffields = document.getElementsByClassName("infinput");
+					for (var i = 0; i < ffields.length; i++) {
+						ffields[i].disabled = false; 
+					}
+					var xfields = document.getElementsByClassName("apinput");
+					for (var i = 0; i < xfields.length; i++) {
+						xfields[i].disabled = true; 
+					}
+				}
+				var macbox = document.getElementById("macbox");
+				macbox.appendChild(document.createTextNode(jsonObj['mac'])); 
+				wirePsk();
+			}
+			
+			// make the PSK field inaccessible when the current net is active in the dropdown
+			function wirePsk() {
+				var dropdown = document.getElementById("netdropdown");
+				var pskfield = document.getElementsByClassName("infinput")[1];
+				if (netWorkJson['isap'] < 1 && dropdown.value == netWorkJson['ssid']) {
+					pskfield.disabled = true;
+				} else {
+					pskfield.disabled = false;
+				}
+				console.log(dropdown.value);
 			}
 			
 			// wire imprint link
@@ -27,6 +110,12 @@
 				var homelink = document.getElementById("tabbox").getElementsByTagName("div")[0].getElementsByTagName("div")[0].children[0];
 				var apradio = document.getElementById("accesspoint");
 				var infradio = document.getElementById("client");
+				var networkform = document.getElementById("networkform");
+				networkform.onsubmit = function() {
+					console.log("Form submitted!"); 
+					changeNetwork();
+					return false;
+				}
 				implink.onclick = function() {
 					document.getElementById("tabbox").children[0].children[1].style.backgroundColor = "whitesmoke";
 					document.getElementById("tabbox").children[0].children[0].style.backgroundColor = "#aeddf0";
@@ -62,7 +151,46 @@
 					for (var i = 0; i < xfields.length; i++) {
 						xfields[i].disabled = true; 
 					}
+					wirePsk();
 				}
+				document.getElementById("netdropdown").onchange = function() {
+					wirePsk();
+				}
+			}
+			
+			function changeNetwork() {
+				var netbox = document.getElementById("netbox"); 
+				var dropdown = document.getElementById("netdropdown");
+				var pskfield = document.getElementsByClassName("infinput")[1];
+				var apradio = document.getElementById("accesspoint");
+				var clradio = document.getElementById("client");
+				var infobox = document.getElementById("infobox"); 
+				var vreq = new XMLHttpRequest();
+				// var vurl = "/wificonnect/";
+				if (netWorkJson['isap'] < 1 && dropdown.value == netWorkJson['ssid'] && clradio.checked == true) {
+					alert("No changes!"); 
+				} else if (netWorkJson['isap'] < 1 && apradio.checked == true) {
+					// switch to AP, show message
+					netbox.style.display = "none";
+					infobox.style.display = "block";
+					document.getElementById("infoswitch2ap").style.display = "block";
+					vreq.open("GET", "/switchnet");
+					vreq.responseType = 'json';
+					vreq.send();
+					// this effectively breaks the connection
+				} else if (clradio.checked == true) {
+					// connect to infrastruct
+					netbox.style.display = "none";
+					infobox.style.display = "block";
+					document.getElementById("infoswitch2inf").style.display = "block";
+					console.log("/wificonnect/" + dropdown.value + "/" + pskfield.value);
+					vreq.open("GET", "/wificonnect/" + dropdown.value + "/" + pskfield.value);
+					vreq.responseType = 'json';
+					vreq.send();
+					// this effectively breaks the connection
+				}
+				// else if (netWorkJson['isap'] > 0 && 
+				return false; 
 			}
 			
 		</script> 
@@ -155,6 +283,22 @@ table.qrstuff, table.qrstuff th, table.qrstuff td {
 #deskview { display: block; }
 #mobileview { display: none; }
 
+#infobox {
+	border-style: solid;
+	border-width: 2px;
+	border-color: red;
+	padding: 10px;
+	display: none;
+}
+
+#infoswitch2inf, #infoswitch2ap {
+	display: none;
+}
+
+#macbox {
+	font-family: fixed; 
+}
+
 /* Tablet, große Smartphones im Querformat */ 
 @media (max-device-width: 960px) and (orientation: landscape), (min-device-width: 600px) and (orientation: portrait) {
 
@@ -176,9 +320,18 @@ table.qrstuff, table.qrstuff th, table.qrstuff td {
 			</div>
 		</div>
 		<div id="mainpage">
+			<div id="infobox">
+				<div id="infoswitch2ap">
+					<p>Der Eitech Robo Controller wird jetzt in den Accesspoint Modus geschaltet. Bitte verbinden Sie Smartphone, Tablet oder PC mit dem Accesspoint "eitech-robo" und rufen Sie dann <a href="http://192.168.1.1/">http://192.168.1.1/</a> auf.</p><p>Falls Sie keine Verbindung herstellen können, drücken Sie 7 Sekunden lang den mit SW gekennzeichneten Taster auf der Robo Controller Platine um wieder mit dem eingerichteten Accesspoint zu verbinden.</p>
+				</div>
+				<div id="infoswitch2inf">
+					<p>Der Eitech-Robo Controller verbindet nun mit dem ausgewählten Accesspoint. Verbinden Sie Smartphone, Tablet oder PC ebenfalls mit dem ausgewählten Accesspoint. Meist ist der Robo Controller dann unter dem MDNS Namen <a href="http://eitech-robo/">http://eitech-robo/</a> ansprechbar. Ist das nicht der Fall, ermitteln Sie im Webinterface des Routers die IP-Adresse des Clients mit der MAC-Adresse <span id="macbox"></span>.</p><p>Falls Sie keine Verbindung herstellen können, resetten Sie den Robo Controller und drücken Sie dann 7 Sekunden lang den mit SW gekennzeichneten Taster um wieder in den Accesspoint-Modus zu wechseln.</p>
+				</div>
+			</div>
+			<div id="netbox">
 			<h3>Netzwerk-Einstellungen</h3>
 			<p>
-				<form>
+				<form id="networkform" method="post">
 					<input type="radio" id="accesspoint" name="netmode" />
 					<label for="accesspoint">Accesspoint</label><br />
 					<label for="apname">ESSID:</label><br />
@@ -186,14 +339,14 @@ table.qrstuff, table.qrstuff th, table.qrstuff td {
 					<input type="radio" id="client" name="netmode" />
 					<label for="client">Client</label><br />
 					<label for="infname">ESSID:</label><br />
-					<select name="infname" class="infinput">
-						<option>pinguinbaendiger</option>
+					<select name="infname" class="infinput" id="netdropdown">
 					</select><br />
 					<label for="appsk">PSK:</label><br />
 					<input class="infinput" type="text" name="infpsk" size="64" /><br />
 					<input type="submit" name="Submit" />
 				</form>
 			</p>
+			</div>
 			<div id="mobileview">
 				<div id="inetmobile">
 					<h3>Laden Sie die App herunter</h3>
