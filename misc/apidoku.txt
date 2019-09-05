@@ -11,31 +11,31 @@ curl -v http://10.76.23.155/get
 "version" : "20190809-1045 ", 
 "isAp" : 0,
  "accessPoint" : [ "eitech-robo", "123456789012345678901234567890123456789012345678901234567890123" ],
- "infraClient" [ "pinguinbaendiger", "8831769357215102" ],
+ "infraClient" : [ "pinguinbaendiger", "8831769357215102" ],
  "maxVoltage" : [ 0, 0, 0, 0, 0 ],
  "motorInvert" : [ 0, 0, 0, 0 ],
  "servoInvert" : [ 0, 0 ],
- "pinMode" : [ 0, 0, 0, 0, 0 ] }
+ "pinMode" : [ 0, 0, 0, 0, 0, 3, 3 ] }
 , 
  "flashSettings" : {
 "version" : "20190809-1045 ", 
 "isAp" : 0,
  "accessPoint" : [ "eitech-robo", "123456789012345678901234567890123456789012345678901234567890123" ],
- "infraClient" [ "pinguinbaendiger", "8831769357215102" ],
+ "infraClient" : [ "pinguinbaendiger", "8831769357215102" ],
  "maxVoltage" : [ 0, 0, 0, 0, 0 ],
  "motorInvert" : [ 0, 0, 0, 0 ],
  "servoInvert" : [ 0, 0 ],
- "pinMode" : [ 0, 0, 0, 0, 0 ] }
+ "pinMode" : [ 0, 0, 0, 0, 0, 3, 3 ] }
 , 
  "defaultSettings" : {
 "version" : "20190809-1045 ", 
 "isAp" : 1,
  "accessPoint" : [ "eitech-robo", "123456789012345678901234567890123456789012345678901234567890123" ],
- "infraClient" [ "1234567890123456789012345678901", "123456789012345678901234567890123456789012345678901234567890123" ],
+ "infraClient" : [ "1234567890123456789012345678901", "123456789012345678901234567890123456789012345678901234567890123" ],
  "maxVoltage" : [ 0, 0, 0, 0, 0 ],
  "motorInvert" : [ 0, 0, 0, 0 ],
  "servoInvert" : [ 0, 0 ],
- "pinMode" : [ 0, 0, 0, 0, 0 ] }
+ "pinMode" : [ 0, 0, 0, 0, 0, 3, 3 ] }
 , 
 "mac" : "f8:f0:5:a9:cd:eb", "signal" : -64, "addr" : "10.76.23.155", "fwInstalled" : "19.5.4", "fwExpected" : "19.5.4",
  "vbat" : 4.79 }
@@ -158,17 +158,22 @@ curl -v http://10.76.23.155/setswitch/127
 
 /setservo
 
-Set both servos to a certain angle. Values from 0 to 180 are accepted. Remember that many servos have a real range of about 270°.
+Set both servos to a certain angle. Values from 0 to 180 are accepted. Remember that many servos have a real range of about 270°. First parameter is the servo to use (0: J7, 1: J6, 2: J5), second the angle:
 
-curl -v http://10.76.23.155/setservo/120/60/
+curl -v http://10.76.23.155/setservo/0/60/
 
 /setmode
 
-Set pinmodes. Default 0 is output, 1 is INPUT, 2 is RPM on J7 (anemometer) or DHT22 on J2. 
+Set pinmodes for J1 to J7. Default 0 is output, 1 is INPUT, omitted trailing pins will be left in current state. Reset board when making changes to servo setup! 
+  // Pin modes are
+  // 0: output
+  // 1: input - also use for DHT22 on J2!
+  // 2: input_pullup - for interrupt, J7 only
+  // 3: servo - currently only pin J5 to J7 - changes need reset!
 
 Example:
 
-curl -v http://10.76.23.155/setmode/0/2/0/1/2
+curl -v http://10.76.23.155/setmode/0/1/0/1/0/3/3
 
 /getanalog
 

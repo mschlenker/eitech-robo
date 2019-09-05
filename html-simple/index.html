@@ -9,6 +9,22 @@
 			// keep the JSON file for network settings globally:
 			var netWorkJson;
 			var versionInfo; 
+			var inetConnection = false; 
+		
+			var localization = {
+				"de" : {
+					"tabnetwork" : "Netzwerk",
+					"tabcontrol" : "Steuerung",
+					"h3network" : "Netzwerkeinstellungen",
+					"h3getapp" : "Laden Sie die App herunter",
+					"h3doc" : "Apps, Dokumentation und Entwicklung",
+					"docdesc" : "Sie k\u00f6nnen den Eitech Robo Controller per App fernsteuern, \u00fcber ein REST-API ansprechen oder mit der Arduino-Entwicklungsumgebung programmieren.",
+					"iosatext" : "Eitech Robo Controller App im iOS App Store",
+					"androidatext" : "Eitech Robo Controller App im Google Play Store",
+					"arduinoatext" : "Arduino-Entwicklungsumgebung f\u00fcr Eitech Robo Controller",
+					"apiatext" : "API-Dokumentation des REST-API Eitech Robo Controller"
+				}
+			};
 		
 			function pageInit() {
 				var cpage = document.getElementById("controlpage");
@@ -20,8 +36,6 @@
 				// }
 				cpage.style.display = "none";
 				ctab.style.backgroundColor = "#aeddf0";
-				// wire links
-				wirelinks();
 				// prepare json for networks
 				var reqUrl = "/getwifi";
 				var req = new XMLHttpRequest();
@@ -47,6 +61,25 @@
 				console.log(navigator.userAgent);
 				console.log(navigator.language);
 				console.log(navigator.platform);
+				if (!inetConnection) {
+					if (document.getElementById("noinetmobile-" + navigator.language)) {
+						document.getElementById("noinetmobile-" + navigator.language).style.display = "block";
+					} else {
+						document.getElementById("noinetmobile").style.display = "block";
+					}
+				}
+				if (localization[navigator.language]) {
+					for (var k in localization[navigator.language]) {
+						// console.log(k + " " +  localization[navigator.language][k]); 
+						if (document.getElementById(k)) {
+							var ele = document.getElementById(k);
+							ele.removeChild(ele.lastChild); 
+							ele.appendChild(document.createTextNode(localization[navigator.language][k])); 
+						}
+					}
+				}
+				// wire links
+				wirelinks();
 			}
 			
 			function populateList(jsonObj) {
@@ -64,7 +97,7 @@
 				// check whether is access point
 				var apradio = document.getElementById("accesspoint");
 				var infradio = document.getElementById("client");
-				if (jsonObj.isAp > 0) {
+				if (jsonObj['isap'] > 0) {
 					apradio.checked = true;
 					console.log("Switch to accesspoint");
 					var ffields = document.getElementsByClassName("infinput");
@@ -87,8 +120,10 @@
 						xfields[i].disabled = true; 
 					}
 				}
-				var macbox = document.getElementById("macbox");
-				macbox.appendChild(document.createTextNode(jsonObj['mac'])); 
+				var macbox = document.getElementsByClassName("macbox");
+				for (var i=0; i<macbox.length; i++) {
+					macbox[i].appendChild(document.createTextNode(jsonObj['mac'])); 
+				}
 				wirePsk();
 			}
 			
@@ -173,7 +208,11 @@
 					// switch to AP, show message
 					netbox.style.display = "none";
 					infobox.style.display = "block";
-					document.getElementById("infoswitch2ap").style.display = "block";
+					if (document.getElementById("infoswitch2ap-" + navigator.language)) {
+						document.getElementById("infoswitch2ap-" + navigator.language).style.display = "block";
+					} else {
+						document.getElementById("infoswitch2ap").style.display = "block";
+					}
 					vreq.open("GET", "/switchnet");
 					vreq.responseType = 'json';
 					vreq.send();
@@ -182,7 +221,11 @@
 					// connect to infrastruct
 					netbox.style.display = "none";
 					infobox.style.display = "block";
-					document.getElementById("infoswitch2inf").style.display = "block";
+					if (document.getElementById("infoswitch2inf-" + navigator.language)) {
+						document.getElementById("infoswitch2inf-" + navigator.language).style.display = "block";
+					} else {
+						document.getElementById("infoswitch2inf").style.display = "block";
+					}
 					console.log("/wificonnect/" + dropdown.value + "/" + pskfield.value);
 					vreq.open("GET", "/wificonnect/" + dropdown.value + "/" + pskfield.value);
 					vreq.responseType = 'json';
@@ -194,12 +237,14 @@
 			}
 			
 		</script> 
+		<script src="./update.js"></script>
 		<style>
 body {
 	margin: 0px;
 	padding: 0px;
 	font-family: sans-serif;
 	background-color: whitesmoke;
+	font-size: 12pt; 
 }
 
 .center {
@@ -218,11 +263,17 @@ body {
 	/* border-width: 1px;
 	border-color: blue;
 	border-style: solid; */
-	height: 45px;
+	height: 60px;
 	position: fixed;
 	top: 0px;
 	left: 0px;
 	z-index: 50; 
+}
+
+#eitech-logo {
+	position: absolute;
+	right: 10px; 
+	top: 2px;
 }
 
 div#tabbox div.center div {
@@ -233,7 +284,7 @@ div#tabbox div.center div {
 	margin:0px;
 	margin-left: 3px;
 	margin-right: 3px;
-	margin-top: 4px;
+	margin-top: 19px;
 	/* background-color: #aeddf0; */
 	background-color: whitesmoke; 
 	padding-top: 11px; 
@@ -260,7 +311,7 @@ div#tabbox div.center div a:visited, div#tabbox div.center div a:active {
 }
 
 #mainpage, #controlpage {
-	margin-top: 70px; 
+	margin-top: 90px; 
 	margin-left: auto;
 	margin-right: auto; 
 	margin-bottom: 60px; 
@@ -268,7 +319,7 @@ div#tabbox div.center div a:visited, div#tabbox div.center div a:active {
 	background-color: whitesmoke; 
 }
 
-#inetmobile {
+#inetmobile, #noinetmobile, #noinetmobile-de {
 	display: none; 
 }
 
@@ -291,23 +342,87 @@ table.qrstuff, table.qrstuff th, table.qrstuff td {
 	display: none;
 }
 
-#infoswitch2inf, #infoswitch2ap {
+#infoswitch2inf, #infoswitch2ap, #infoswitch2inf-de, #infoswitch2ap-de {
 	display: none;
 }
 
-#macbox {
+span.macbox {
 	font-family: fixed; 
 }
 
 /* Tablet, große Smartphones im Querformat */ 
 @media (max-device-width: 960px) and (orientation: landscape), (min-device-width: 600px) and (orientation: portrait) {
-
+	#mainpage, #controlpage {
+		max-width: 99%; 
+	}
+	body{
+		font-size: 18pt; 
+	}
+	#tabbox {
+		margin: 0px;
+		padding: 0px;
+		width: 100%;
+		font-size: 18pt; 
+	}
+	form, form label, form input, select {
+		font-size: 18pt; 
+	}
 }
 
 /* Smartphone im Hochformat */
 @media (max-device-width: 599px) and (orientation: portrait) {
+	body{
+		font-size: 24pt; 
+	}
+	p, div {
+		// font-size: 24pt; 
+	}
+	.center {
+		margin: 0px;
+		padding: 0px;
+		margin-left: auto;
+		margin-right:auto;
+		width: 66%;
+	}
+	#tabbox {
+		margin: 0px;
+		padding: 0px;
+		width: 100%;
+		font-size: 30pt; 
+		height: 48pt;
+		position: fixed;
+		top: 0px;
+		left: 0px;
+		z-index: 50; 
+	}
+	div#tabbox div.center div {
+		text-align: center;
+		width: 43%;
+		float: left;
+		height: 43pt;
+		margin:0px;
+		margin-left: 2pt;
+		margin-right: 2pt;
+		margin-top: 3pt;
+		padding-top: 3pt; 
+		border-radius: 0px;
+		border-top-left-radius: 8px;
+		border-top-right-radius: 8px;
+		font-weight: bold; 
+	}
+	#formbox {
+		max-width: 99%; 
+		overflow: hidden; 
+	}
+	form, form label, form input, select {
+		font-size:30pt; 
+	}
+	#mainpage, #controlpage {
+		max-width: 99%; 
+	}
 	#deskview { display: none; }
 	#mobileview { display: block; }
+	#eitech-logo { display: none; }
 }
 		</style>
 		<title>Eitech Robo Controller</title>
@@ -315,82 +430,102 @@ table.qrstuff, table.qrstuff th, table.qrstuff td {
 	<body onload="pageInit();">
 		<div id="tabbox">
 			<div class="center">
-				<div><a href="#network">Netzwerk</a></div>
-				<div><a href="#controller">Steuerung</a></div>
+				<div><a href="#network" id="tabnetwork">Network</a></div>
+				<div><a href="#controller" id="tabcontrol">Control</a></div>
+			</div>
+			<div id="eitech-logo">
+				<img src="./img/eitech.png" /> 
 			</div>
 		</div>
 		<div id="mainpage">
 			<div id="infobox">
 				<div id="infoswitch2ap">
-					<p>Der Eitech Robo Controller wird jetzt in den Accesspoint Modus geschaltet. Bitte verbinden Sie Smartphone, Tablet oder PC mit dem Accesspoint "eitech-robo" und rufen Sie dann <a href="http://192.168.1.1/">http://192.168.1.1/</a> auf.</p><p>Falls Sie keine Verbindung herstellen können, drücken Sie 7 Sekunden lang den mit SW gekennzeichneten Taster auf der Robo Controller Platine um wieder mit dem eingerichteten Accesspoint zu verbinden.</p>
+					<p>The Eitech Robo Controller will now be switched to access point mode. 
+					Please connect your smart phone, tablet or PC to the access point "eitech-robo"
+					and navigate to <a href="http://192.168.1.1/">http://192.168.1.1/</a>.</p><p>If
+					you are unable to connect, press the button marked SW on the board for about 7
+					seconds to reconnect to the last used access point.</p>
 				</div>
 				<div id="infoswitch2inf">
-					<p>Der Eitech-Robo Controller verbindet nun mit dem ausgewählten Accesspoint. Verbinden Sie Smartphone, Tablet oder PC ebenfalls mit dem ausgewählten Accesspoint. Meist ist der Robo Controller dann unter dem MDNS Namen <a href="http://eitech-robo/">http://eitech-robo/</a> ansprechbar. Ist das nicht der Fall, ermitteln Sie im Webinterface des Routers die IP-Adresse des Clients mit der MAC-Adresse <span id="macbox"></span>.</p><p>Falls Sie keine Verbindung herstellen können, resetten Sie den Robo Controller und drücken Sie dann 7 Sekunden lang den mit SW gekennzeichneten Taster um wieder in den Accesspoint-Modus zu wechseln.</p>
+					<p>The Eitech Robo Controller now connects to the chosen access point. Connect your
+					smart phone, tablet or PC to this access point as well. In most cases the Robo Controller 
+					then can be accessed by its MDNS name <a href="http://eitech-robo/">http://eitech-robo/</a>.
+					If this is not the case go to the administration interface of your crouter and search for the network device with the MAC address <span class="macbox"></span>.</p><p>In case you cannot connect, reset the Robo Controllers network settings by pressing the switch labeled SW for about 7 seconds and repeat the configuration.</p>
+				</div>
+			
+				<div id="infoswitch2ap-de">
+					<p>Der Eitech Robo Controller wird jetzt in den Accesspoint Modus geschaltet. Bitte verbinden Sie Smartphone, Tablet oder PC mit dem Accesspoint "eitech-robo" und rufen Sie dann <a href="http://192.168.1.1/">http://192.168.1.1/</a> auf.</p><p>Falls Sie keine Verbindung herstellen k&ouml;nnen, dr&uuml;cken Sie 7 Sekunden lang den mit SW gekennzeichneten Taster auf der Robo Controller Platine um wieder mit dem eingerichteten Accesspoint zu verbinden.</p>
+				</div>
+				<div id="infoswitch2inf-de">
+					<p>Der Eitech-Robo Controller verbindet nun mit dem ausgew&auml;hlten Accesspoint. Verbinden Sie Smartphone, Tablet oder PC ebenfalls mit dem ausgew&auml;hlten Accesspoint. Meist ist der Robo Controller dann unter dem MDNS Namen <a href="http://eitech-robo/">http://eitech-robo/</a> ansprechbar. Ist das nicht der Fall, ermitteln Sie im Webinterface des Routers die IP-Adresse des Clients mit der MAC-Adresse <span class="macbox"></span>.</p><p>Falls Sie keine Verbindung herstellen k&ouml;nnen, resetten Sie den Robo Controller und dr&uuml;cken Sie dann 7 Sekunden lang den mit SW gekennzeichneten Taster um wieder in den Accesspoint-Modus zu wechseln.</p>
 				</div>
 			</div>
 			<div id="netbox">
-			<h3>Netzwerk-Einstellungen</h3>
-			<p>
+			<h3 id="h3network">Network settings</h3>
+			<p id="formbox">
 				<form id="networkform" method="post">
 					<input type="radio" id="accesspoint" name="netmode" />
 					<label for="accesspoint">Accesspoint</label><br />
 					<label for="apname">ESSID:</label><br />
-					<input class="apinput" type="text" name="apname" size="64" value="eitech-robo"/><br />
+					<input class="apinput" type="text" name="apname" size="40" value="eitech-robo"/><br />
 					<input type="radio" id="client" name="netmode" />
 					<label for="client">Client</label><br />
 					<label for="infname">ESSID:</label><br />
 					<select name="infname" class="infinput" id="netdropdown">
 					</select><br />
 					<label for="appsk">PSK:</label><br />
-					<input class="infinput" type="text" name="infpsk" size="64" /><br />
+					<input class="infinput" type="text" name="infpsk" size="40" /><br />
 					<input type="submit" name="Submit" />
 				</form>
 			</p>
 			</div>
 			<div id="mobileview">
 				<div id="inetmobile">
-					<h3>Laden Sie die App herunter</h3>
+					<h3 id="h3getapp">Get the app!</h3>
 					<p style="text-align:center;">
-						<a href="https://jmp.eitech-robotics.de/23"><img src="https://static.eitech-robotics.de/img/iosappstore.png" width="300" /></a>
+						<a href="https://jmp.eitech-robotics.de/23"><img src="./img/appstore.png" width="300" /></a>
 					</p>
 					<p style="text-align:center;">
-						<a href="https://jmp.eitech-robotics.de/24"><img src="https://static.eitech-robotics.de/img/playstoreblk.png" width="300" /></a>
+						<a href="https://jmp.eitech-robotics.de/24"><img src="./img/playstore.png" width="300" /></a>
 					</p>
 				</div>
 				<div id="noinetmobile">
+					<h3>Missing internet connection</h3>
+					<p>Currently no internet connection is available. Use the Google Play Store or Apple App Store app to search for the  "Eitech Robo Controller" and install it to remotely control your Robo Controller.</p>
+				</div>
+				<div id="noinetmobile-de">
 					<h3>Keine Internetverbindung</h3>
 					<p>Momentan ist keine Internetverbindung vorhanden. Suchen Sie im Google Play Store oder im Apple App Store die App "Eitech Robo Controller" und installieren Sie diese um den Roboter Controller fernzusteuern.</p>
 				</div>
 			</div>
 			<div id="deskview">
-				<h3>Apps, Dokumentation und Entwicklung</h3>
-				<p>
-					Sie können den Eitech Robo Controller per App fernsteuern, über ein REST-API ansprechen oder mit der Arduino-Entwicklungsumgebung programmieren. 
+				<h3 id="h3doc">Apps, docs and development</h3>
+				<p id="docdesc">
+					Pilot the Robo Controller using an app, utilize the REST API to communicate with the Robo Controller or program the Robo Controller with the Arduino IDE. 
 				</p>
 				<ul>
-					<li><a href="https://jmp.eitech-robotics.de/23" target="_blank">Eitech Robo Controller App im iOS App Store</a></li>
-					<li><a href="https://jmp.eitech-robotics.de/24" target="_blank">Eitech Robo Controller App im Google Play Store</a></li>
-					<li><a href="https://jmp.eitech-robotics.de/25" target="_blank">Arduino-Entwicklungsumgebung für Eitech Robo Controller</a></li>
-					<li><a href="https://jmp.eitech-robotics.de/26" target="_blank">API-Dokumentation des REST-API Eitech Robo Controller</a></li>
+					<li><a href="https://jmp.eitech-robotics.de/23" target="_blank" id="iosatext">Download the Eitech Robo Controller App from iOS App Store</a></li>
+					<li><a href="https://jmp.eitech-robotics.de/24" target="_blank" id="androidatext">Download the Eitech Robo Controller App from Google Play Store</a></li>
+					<li><a href="https://jmp.eitech-robotics.de/25" target="_blank" id="arduinoatext">Download the Arduino Development Environment for Eitech Robo Controller</a></li>
+					<li><a href="https://jmp.eitech-robotics.de/26" target="_blank" id="apiatext">Reat the API documentation to learn how to des REST-API Eitech Robo Controller</a></li>
 				</ul>
 				<p style="text-align:center;">
 				<table class="qrstuff">
 					<tr>
-					<td><img src="https://static.eitech-robotics.de/img/qr23.png" width="300" /></td>
+					<td><img src="./img/qr23.png" width="300" /></td>
 					<td></td>
-					<td><img src="https://static.eitech-robotics.de/img/qr24.png" width="300" /></td>
+					<td><img src="./img/qr24.png" width="300" /></td>
 					</tr>
-					<td><a href="https://jmp.eitech-robotics.de/23"><img src="https://static.eitech-robotics.de/img/iosappstore.png" width="300" /></a></td>
+					<td><a href="https://jmp.eitech-robotics.de/23"><img src="./img/appstore.png" width="300" /></a></td>
 					<td></td>
-					<td><a href="https://jmp.eitech-robotics.de/24"><img src="https://static.eitech-robotics.de/img/playstoreblk.png" width="300" /></a></td>
+					<td><a href="https://jmp.eitech-robotics.de/24"><img src="./img/playstore.png" width="300" /></a></td>
 					</tr>
 				</table>
 				</p>
 			</div>
 		</div>
 		<div id="controlpage">
-			Control Page
+			The controls page is currently only available when a fully routed internet connection is available. Future revisions of the firmware might allow offline usage of these extended controls.  
 		</div>
 	</body>
-	<script src="https://static.eitech-robotics.de/js/robo-20190901.js"></script>
 </html>

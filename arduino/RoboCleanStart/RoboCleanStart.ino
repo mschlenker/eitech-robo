@@ -3,6 +3,12 @@
 #include <SPIMemory.h>
 #include <Servo.h>
 #include <SimpleDHT.h>
+#include "qr23_png.h"
+#include "qr24_png.h"
+#include "appstore_png.h"
+#include "playstore_png.h"
+#include "eitech_png.h"
+#include "index_html.h"
 
 // #define SERIAL_DEBUG
 
@@ -10,6 +16,7 @@
 
 #define DIST_TRIGGER 14
 #define DIST_RECEIVE 13
+#define MAX_PACKET_LEN 1400
 
 #define J1 15
 #define J2 25
@@ -33,6 +40,7 @@ volatile int anemoTicks;
 int anemoRpm = 0;
 unsigned long lastAnemoRollback = 0; 
 
+Servo servoA;
 Servo servoL;
 Servo servoR; 
 SimpleDHT22 dht22;
@@ -41,6 +49,7 @@ SPIFlash flash(24);
 WiFiServer webserver(80); // webserver at port 80
 char *httpRequestURL; // HTTP request from client
 String jsonReply; // Reply data, usually JSON
+String preparedNetworks; // prepare networks in AP mode
 char outBuff[OUTPUT_BUFFER];
 
 // bool isAP = false;
@@ -55,7 +64,7 @@ const uint8_t pinMotor[4][2] = { { RM1A, RM1B }, { RM2A, RM2B }, { RM3A, RM3B },
 // char apName[12] = "eitech-robo";
 
 struct settings {
-  char fwVersion[14] = "20190812-1145";
+  char fwVersion[14] = "20190903-1200";
   bool isAp = true; 
   char apSSID[32] = "1234567890123456789012345678901";
   char apPSK[64] = "123456789012345678901234567890123456789012345678901234567890123";
@@ -64,7 +73,7 @@ struct settings {
   int maxVoltage[5] = { 0, 0, 0, 0, 0 };
   bool motorInvert[4] = { false, false, false, false };
   bool servoInvert[2] = { false, false };
-  uint8_t pinMode[5] = { 0, 0, 0, 0, 0 };
+  uint8_t pinMode[7] = { 0, 1, 0, 0, 0, 3, 3 };
 };
 
 settings defSettings;
@@ -87,6 +96,13 @@ bool startWifi() {
   // WiFi.hostname(mdnsName); //use MDNS name as host name (DHCP option 12)
 
   if (defSettings.isAp) {
+    // Create list of ESSIDs nearby first
+    WiFi.begin();
+    defSettings.isAp = false;
+    listNetworks(true);
+    defSettings.isAp = true;
+    preparedNetworks = jsonReply;
+    WiFi.end(); 
     // create AP
     // Serial.print("Create an open Access Point: ");
     // Serial.println(ssid);
@@ -117,20 +133,24 @@ bool startWifi() {
 }
 
 void changeMode() {
-  for (int i=0; i<5; i++) {
+  // Pin modes are
+  // 0: output
+  // 1: input - also use for DHT22 on J2!
+  // 2: input_pullup - for interrupt, J7 only
+  // 3: servo - currently only pin J6 and J7 - changes need reboot!
+  for (int i=0; i<7; i++) {
     if (defSettings.pinMode[i] == 0) {
       pinMode(jpins[i], OUTPUT); 
     } else if (defSettings.pinMode[i] == 1) {
       pinMode(jpins[i], INPUT); 
     } else if (defSettings.pinMode[i] == 2) {
-      if (i == 4 || i == 1) {
+      if (i == 6) {
         // J7 configured as interrupt pin for anemometer and similar
         pinMode(jpins[i], INPUT_PULLUP); 
         attachInterrupt(jpins[i], anemoCount, FALLING);
-      } else if (i == 1) {
-        // J2 setup for DHT22
-        pinMode(jpins[i], INPUT); 
       }
+    } else if (defSettings.pinMode[i] == 3) {
+      // Do nothing! Servos are attached upon startup!
     }
   }
 }
@@ -159,8 +179,7 @@ void resetToDefaults() {
 /*
    initialize motor port (1...4) and set speed to 0
 */
-void initMotor(uint32_t motorNr)
-{
+void initMotor(uint32_t motorNr) {
   if ((motorNr >= 1) && (motorNr <= 4))
   {
     motorNr--;
@@ -255,21 +274,25 @@ void printSettings(settings sets, char description[16]) {
     if (i<1) jsonReply += ", ";
   }
   jsonReply += " ],\n \"pinMode\" : [ ";
-  for (int i=0; i<5; i++) {
+  for (int i=0; i<7; i++) {
     jsonReply += sets.pinMode[i];
-    if (i<4) jsonReply += ", ";
+    if (i<6) jsonReply += ", ";
   }
   jsonReply += " ] }\n";
 }
 
-void listNetworks() {
+void listNetworks(bool apMode) {
+  // use prepared networks
+  if (defSettings.isAp) {
+    jsonReply = preparedNetworks;
+    return;
+  }
   // scan for nearby networks:
   // Serial.println("** Scan Networks **");
-  byte numSsid = WiFi.scanNetworks();
-
   // print the list of networks seen:
   /* Serial.print("number of available networks:");
   Serial.println(numSsid); */
+  byte numSsid = WiFi.scanNetworks();
   jsonReply = "{ \"networks\" : [ ";
   // print the network number and name for each network found:
   for (int thisNet = 0; thisNet < numSsid; thisNet++) {
@@ -294,7 +317,7 @@ void listNetworks() {
     }
   }
   jsonReply += " ] ,\n \"isap\" : ";
-  jsonReply += defSettings.isAp;
+  jsonReply += apMode;
   jsonReply += ", \"ssid\" : \"";
   jsonReply += WiFi.SSID();
   byte mac[6];
@@ -522,6 +545,19 @@ bool httpSplitRequest(char *httpRequest, size_t len) {
   return false;
 }
 
+void httpSendData(WiFiClient &client, const char *data, int len) {
+  while(len > 0)
+  {
+    int sendlen = len;
+    if(len > MAX_PACKET_LEN)
+      sendlen = MAX_PACKET_LEN;
+
+    client.write(data, sendlen);
+    data += sendlen;
+    len -= sendlen;
+  }
+}
+
 /*
    get HTTP resource string
 */
@@ -556,10 +592,12 @@ void stopEverything() {
 }
 
 void setServoPos(int snum, int spos) {
-        if (snum == 0) {
-                servoL.write(spos);
-        } else {
+        if (snum == 0 && defSettings.pinMode[6] == 3) {
                 servoR.write(spos);
+        } else if (snum == 1 && defSettings.pinMode[5] == 3) {
+                servoL.write(spos);
+        } else if (snum == 2 && defSettings.pinMode[4] == 3) {
+                servoA.write(spos);
         }
 }
 
@@ -570,10 +608,7 @@ void setup() {
   backupSettings = defSettings; 
   pinMode(DIST_TRIGGER, OUTPUT);
   pinMode(DIST_RECEIVE, INPUT);
-  servoL.attach(J6);
-  servoR.attach(J5);
-  setServoPos(0, 90);
-  setServoPos(1, 90);
+  
   // init pins
   initMotor(1);
   initMotor(2);
@@ -623,6 +658,18 @@ void setup() {
     // flash.writeCharArray(VERS_ADDRESS, backupSettings.fwVersion, 12);
     flash.readAnything(FLASH_ADDRESS, flashSettings);
   }
+  if (defSettings.pinMode[4] == 3) {
+    servoA.attach(J5);
+    setServoPos(2, 90);
+  }
+  if (defSettings.pinMode[5] == 3) {
+    servoL.attach(J6);
+    setServoPos(1, 90);
+  }
+  if (defSettings.pinMode[6] == 3) {
+    servoR.attach(J7);
+    setServoPos(0, 90);
+  }
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(PIN_A2, INPUT);
   changeMode(); 
@@ -638,25 +685,9 @@ void setup() {
   Serial.println();
   #endif
   // wait for WiFi connection
-  while (!startWifi())
-  {
+  while (!startWifi()) {
     delay(5000); // wait 5 seconds and retry
   }
-
-  // 
-  // String teststr = "Hallo Welt!";
-  /* flash.eraseSection(0, 256);
-    flash.writeByte(ADDR_WIFIMODE, B00000000);
-    flash.writeStr(ADDR_SSID_AP, teststr);  */
-
-  // start webserver
-  // webserver.begin();
-
-  // start MDNS responder to listen to the configured name
-// #ifdef MDNS_SUPPORT
-//   mdnsResponder.begin(mdnsName);
-// #endif
-
   // you're connected now, so print out the status
   printWifiStatus();
 }
@@ -882,7 +913,7 @@ void loop() {
               break;
             } else if (httpGetResource(0) == "getwifi") {
               // Serial.println("Getting WiFi parameters and networks");
-              listNetworks();
+              listNetworks(defSettings.isAp);
               client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
@@ -891,12 +922,15 @@ void loop() {
               client.write(outBuff);
               break;
             } else if (httpGetResource(0) == "setmode") {
-              // modes of port: 0 output
-              //                1 input
-              //                2 interrupt 
-              // Serial.println("Changing mode of Port");
-              for (int i=0; i<5; i++) {
-                defSettings.pinMode[i] = httpGetResource(i+1).toInt();
+              // Pin modes are
+              // 0: output
+              // 1: input - also use for DHT22 on J2!
+              // 2: input_pullup - for interrupt, J7 only
+              // 3: servo - currently only pin J6 and J7 - changes need reboot!
+              for (int i=0; i<7; i++) {
+                if (httpGetResource(i+1) != "") {
+                  defSettings.pinMode[i] = httpGetResource(i+1).toInt();
+                }
               }
               changeMode(); 
               jsonReply = "{ ";
@@ -910,9 +944,13 @@ void loop() {
               client.write(outBuff);
               break;
             } else if (httpGetResource(0) == "setanalog") {
-              // Serial.println("Setting analogue output on J1 to J5");
-              for (int i=0; i<5; i++) {
-                  analogWrite(jpins[i], httpGetResource(i+1).toInt()); 
+              // Serial.println("Setting analogue output on J1 to J7");
+              for (int i=0; i<7; i++) {
+                  if (httpGetResource(i+1) != "") {
+                    if (defSettings.pinMode[i] < 3) {
+                      analogWrite(jpins[i], httpGetResource(i+1).toInt()); 
+                    }
+                  }
               }
               jsonReply = "{ ";
               getVoltage();
@@ -997,8 +1035,38 @@ void loop() {
               }
               client.write(outBuff);
               break;
-            }
+            } else if (httpGetResource(0) == "img") {
+              client.write("HTTP/1.0 200 OK\r\nContent-type: image/png\r\n\r\n");
+              // httpSendData(client, (const char *)background_jpg, sizeof(background_jpg));
+              int len = 0;
+              if (httpGetResource(1) == "qr23.png") {
+                httpSendData(client, (const char *)qr23_png, sizeof(qr23_png));
+              } else if (httpGetResource(1) == "qr24.png") {
+                httpSendData(client, (const char *)qr24_png, sizeof(qr24_png));
+              } else if  (httpGetResource(1) == "appstore.png") {
+                httpSendData(client, (const char *)appstore_png, sizeof(appstore_png));
+              } else if  (httpGetResource(1) == "playstore.png") {
+                httpSendData(client, (const char *)playstore_png, sizeof(playstore_png));
+              } else if  (httpGetResource(1) == "eitech.png") {
+                httpSendData(client, (const char *)eitech_png, sizeof(eitech_png));
+              } 
+              break;
+            } else if (httpGetResource(0) == "update.js") {
+              // HTTP/1.1 302 Moved Temporarily
+              if (defSettings.isAp) {
+                client.write("HTTP/1.0 200 OK\r\nContent-type: aplication/javascript\r\n\r\n/* DUMMY */\r\n\r\n");                  
+              } else {
+                client.write("HTTP/1.0 302 Moved Temporarily\r\nLocation: https://static.eitech-robotics.de/js/robo-"); 
+                client.write(defSettings.fwVersion);
+                client.write(".js\r\n\r\n");
+              }
+            } else if (httpGetResource(0) == "index.html" || httpGetResource(0) == "") {
             // Serial.println(httpRequestURL);
+            // client.write("HTTP/1.0 200 OK\nContent-type: text/plain\n\nHallo Welt!\n\n");
+              client.write("HTTP/1.0 200 OK\r\nContent-type: text/html\r\n\r\n");
+              httpSendData(client, (const char *)index_html, sizeof(index_html));
+              break; 
+            }
             client.write("HTTP/1.0 200 OK\nContent-type: text/plain\n\nHallo Welt!\n\n");
             break;
           }
