@@ -22,7 +22,10 @@
 					"iosatext" : "Eitech Robo Controller App im iOS App Store",
 					"androidatext" : "Eitech Robo Controller App im Google Play Store",
 					"arduinoatext" : "Arduino-Entwicklungsumgebung f\u00fcr Eitech Robo Controller",
-					"apiatext" : "API-Dokumentation des REST-API Eitech Robo Controller"
+					"apiatext" : "API-Dokumentation des REST-API Eitech Robo Controller",
+					"expectedFw" : "erwartet",
+					// table rows description:
+					"statusrows" : [ "Batteriespannung", "Firmware WLAN-Modul", "Eitech Robo Firmware", "IP-Adresse", "MAC-Adresse" ]
 				}
 			};
 		
@@ -57,6 +60,17 @@
 					versionInfo = vreq.response;
 					console.log(versionInfo['currentSettings']['version']);
 				}
+				// localization for statustable
+				if (localization[navigator.language]["statusrows"]) {
+					var infotab = document.getElementById("statustable");
+					for (var i=0; i<5; i++) {
+						var td = infotab.getElementsByTagName("tr")[i].getElementsByTagName("td")[0]; 
+						if (td.hasChildNodes()) {
+						 	td.removeChild(td.childNodes[0]);
+						}
+						td.appendChild(document.createTextNode(localization[navigator.language]["statusrows"][i] + ": "));
+					}
+				} 
 				// log some statistics
 				console.log(navigator.userAgent);
 				console.log(navigator.language);
@@ -80,6 +94,7 @@
 				}
 				// wire links
 				wirelinks();
+				wiresteerform();
 			}
 			
 			function populateList(jsonObj) {
@@ -139,6 +154,51 @@
 				console.log(dropdown.value);
 			}
 			
+			// switch to controls, update parameterst
+			function switch2controls() {
+				// get the table:
+				var infotab = document.getElementById("statustable");
+				var vreq = new XMLHttpRequest();
+				var vurl ="/get";
+				vreq.open("GET", vurl);
+				vreq.responseType = 'json';
+				vreq.send();
+				vreq.onload = function() {
+					console.log('JSON loaded!');
+					fwInfo = vreq.response;
+					// console.log(versionInfo['currentSettings']['version']);
+					for (var i=0; i<5; i++) {
+						var td = infotab.getElementsByTagName("tr")[i].getElementsByTagName("td")[1]; 
+						if (td.hasChildNodes()) {
+							td.removeChild(td.childNodes[0]);
+						}
+						var txt;
+						if (i==0) {
+							txt = document.createTextNode(fwInfo['vbat'] + "V");
+						} else if (i==1) {
+							if (localization[navigator.language]["expected"]) {
+								txt = document.createTextNode(fwInfo['fwInstalled'] + " (" +localization[navigator.language]["expectedFw"] + ": " + fwInfo['fwExpected'] + ")" ); 
+							} else {
+								txt = document.createTextNode(fwInfo['fwInstalled'] + " (expected: " + fwInfo['fwExpected'] + ")" ); 
+							}
+						} else if (i==2) {
+							txt = document.createTextNode(fwInfo['currentSettings']['version']);
+						} else if (i==3) {
+							txt = document.createTextNode(fwInfo['addr']);
+						} else if (i==4) {
+							txt = document.createTextNode(fwInfo['mac']);
+						}
+						td.appendChild(txt);
+					}
+				}
+				document.getElementById("tabbox").children[0].children[1].style.backgroundColor = "whitesmoke";
+				document.getElementById("tabbox").children[0].children[0].style.backgroundColor = "#aeddf0";
+				document.getElementById("controlpage").style.display = "block";
+				document.getElementById("mainpage").style.display = "none";
+				return false; 
+			}
+		
+			
 			// wire imprint link
 			function wirelinks() {
 				var implink = document.getElementById("tabbox").getElementsByTagName("div")[0].getElementsByTagName("div")[1].children[0];
@@ -151,13 +211,7 @@
 					changeNetwork();
 					return false;
 				}
-				implink.onclick = function() {
-					document.getElementById("tabbox").children[0].children[1].style.backgroundColor = "whitesmoke";
-					document.getElementById("tabbox").children[0].children[0].style.backgroundColor = "#aeddf0";
-					document.getElementById("controlpage").style.display = "block";
-					document.getElementById("mainpage").style.display = "none";
-					return false; 
-				}
+				implink.onclick = function() { switch2controls(); } 
 				homelink.onclick = function() {
 					document.getElementById("tabbox").children[0].children[0].style.backgroundColor = "whitesmoke";
 					document.getElementById("tabbox").children[0].children[1].style.backgroundColor = "#aeddf0";
@@ -234,6 +288,81 @@
 				}
 				// else if (netWorkJson['isap'] > 0 && 
 				return false; 
+			}
+			
+			function wiresteerform() {
+				var form = document.getElementById("caterpillarform");
+				var ips = form.getElementsByTagName("input");
+				form.onsubmit = function() {
+					console.log("Submitted form"); 
+					return false; 
+				}
+				for (var i=0; i<ips.length; i++) {
+					if (ips[i].getAttribute("name") == "interval") {
+						ips[i].onchange = function() {
+							var vreq = new XMLHttpRequest();
+							var ifield = document.getElementById("timeoutinterval");
+							vreq.open("GET", "/timeout/" + ifield.value);
+							vreq.responseType = 'json';
+							vreq.send();
+							console.log(ifield.value);
+							return false; 
+						}
+					} else if (ips[i].getAttribute("name") == "armleft") {
+						ips[i].onchange = function() {
+							var frm = document.getElementById("caterpillarform");
+							var ins = form.getElementsByTagName("input");
+							var vreq = new XMLHttpRequest();
+							for (var i=0; i<ins.length; i++) {
+								if (ins[i].getAttribute("name") == "armleft") {
+									vreq.open("GET", "/setservo/0/" + ins[i].value);
+									vreq.responseType = 'json';
+									vreq.send();
+								}
+							}
+							return false;
+						}
+					} else if (ips[i].getAttribute("name") == "armright") {
+						ips[i].onchange = function() {
+							var frm = document.getElementById("caterpillarform");
+							var ins = form.getElementsByTagName("input");
+							var vreq = new XMLHttpRequest();
+							for (var i=0; i<ins.length; i++) {
+								if (ins[i].getAttribute("name") == "armright") {
+									vreq.open("GET", "/setservo/1/" + (180 - ins[i].value));
+									vreq.responseType = 'json';
+									vreq.send();
+								}
+							}
+							return false;
+						}
+					} else if ( ips[i].getAttribute("name") != "stop") {
+						ips[i].onchange = function() {
+							var speed = 0;
+							var dir = 0; 
+							var ms = [ 0, 0];
+							var frm = document.getElementById("caterpillarform");
+							var ins = form.getElementsByTagName("input");
+							var vreq = new XMLHttpRequest();
+							for (var i=0; i<ins.length; i++) {
+								if (ins[i].getAttribute("name") == "speed") { speed = ins[i].value; }
+								else if (ins[i].getAttribute("name") == "direction") { dir = ins[i].value; }
+							}
+							console.log("Speed: " + speed);
+							console.log("Direction: " + dir); 
+							return false; 
+						}
+					} else {
+						ips[i].onclick = function() {
+							console.log("Stop button pressed"); 
+							return false; 
+						}
+					}
+				}
+			}
+			
+			function calculatemotors(speed, direction) {
+				
 			}
 			
 		</script> 
@@ -350,7 +479,11 @@ span.macbox {
 	font-family: fixed; 
 }
 
-/* Tablet, große Smartphones im Querformat */ 
+.sliderwide, .fullwidthbutton {
+	width: 95%;
+}
+
+/* Tablet, grosse Smartphones im Querformat */ 
 @media (max-device-width: 960px) and (orientation: landscape), (min-device-width: 600px) and (orientation: portrait) {
 	#mainpage, #controlpage {
 		max-width: 99%; 
@@ -535,20 +668,32 @@ span.macbox {
 				<tr>
 					<td>Eitech Robo software:</td><td></td>
 				</tr>
-				<!-- <tr>
-					<td>WiFi status:</td><td></td>
-				</tr> -->
 				<tr>
 					<td>IP address:</td><td></td>
 				</tr>
 				<tr>
 					<td>MAC address:</td><td></td>
 				</tr>
-				<tr>
-					<td></td><td></td>
-				</tr>
 			</table>
 			<!-- The controls page is currently only available when a fully routed internet connection is available. Future revisions of the firmware might allow offline usage of these extended controls. --> 
+			<div id="robocontrols">
+				<h3>Eitech Robo wiring</h3>
+				<form id="caterpillarform">
+					<span id="intervalH">Interval for timeout:</span> <input name="interval" type="number" value="500" min="0" max="3000" step="250" id="timeoutinterval"></input>ms<br />
+					<span id="speedH">Speed:</span><br />
+					<input type="range" name="speed" min="-255" max="255" step="5" class="sliderwide"></input><br />
+					<span id="directionH">Direction:</span><br />
+					<input type="range" name="direction" min="-90" max="90" step="5" class="sliderwide"></input><br />
+					<span id="armLH">Arm left:</span><br />
+					<input type="range" name="armleft" min="0" max="180" step="5" class="sliderwide"></input><br />
+					<span id="armRH">Arm right:</span><br />
+					<input type="range" name="armright" min="0" max="180" step="5" class="sliderwide"></input><br />
+					<span id="ledsetH">LED:</span><br />
+					<input type="range" name="led" min="0" max="255" step="5" class="sliderwide" value="0"></input><br />
+					<br />
+					<input type="submit" name="stop" class="fullwidthbutton" value="Stop">
+				</form>
+			</div>
 		</div>
 	</body>
 </html>
