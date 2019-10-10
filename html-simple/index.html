@@ -24,6 +24,13 @@
 					"arduinoatext" : "Arduino-Entwicklungsumgebung f\u00fcr Eitech Robo Controller",
 					"apiatext" : "API-Dokumentation des REST-API Eitech Robo Controller",
 					"expectedFw" : "erwartet",
+					"morecontrols" : "Wenn eine vollst\u00e4ndige Internetverbindung verf\u00fcgbar ist, werden weitere Regler angezeigt. K\u00fcnftige Revisionen dieser Firmware werden auch offline mehr Steuerm\u00f6glichkeiten anbieten.",
+					"intervalH" : "Intervall max. (Timeout):",
+					"speedH" : "Geschwindigkeit",
+					"directionH" : "Richtung",
+					"armLH" : "Arm links",
+					"armRH" : "Arm rechts",
+					"ledsetH" : "LED Augen",
 					// table rows description:
 					"statusrows" : [ "Batteriespannung", "Firmware WLAN-Modul", "Eitech Robo Firmware", "IP-Adresse", "MAC-Adresse" ]
 				}
@@ -59,18 +66,21 @@
 					console.log('JSON loaded!');
 					versionInfo = vreq.response;
 					console.log(versionInfo['currentSettings']['version']);
+					fillapname(versionInfo);
 				}
 				// localization for statustable
-				if (localization[navigator.language]["statusrows"]) {
-					var infotab = document.getElementById("statustable");
-					for (var i=0; i<5; i++) {
-						var td = infotab.getElementsByTagName("tr")[i].getElementsByTagName("td")[0]; 
-						if (td.hasChildNodes()) {
-						 	td.removeChild(td.childNodes[0]);
+				if (localization[navigator.language]) {
+					if (localization[navigator.language]["statusrows"]) {
+						var infotab = document.getElementById("statustable");
+						for (var i=0; i<5; i++) {
+							var td = infotab.getElementsByTagName("tr")[i].getElementsByTagName("td")[0]; 
+							if (td.hasChildNodes()) {
+								td.removeChild(td.childNodes[0]);
+							}
+							td.appendChild(document.createTextNode(localization[navigator.language]["statusrows"][i] + ": "));
 						}
-						td.appendChild(document.createTextNode(localization[navigator.language]["statusrows"][i] + ": "));
 					}
-				} 
+				}
 				// log some statistics
 				console.log(navigator.userAgent);
 				console.log(navigator.language);
@@ -140,6 +150,27 @@
 					macbox[i].appendChild(document.createTextNode(jsonObj['mac'])); 
 				}
 				wirePsk();
+			}
+			
+			function fillapname(jsonObj) {
+				var apspans = document.getElementsByClassName("newapname");
+				var mdns = document.getElementsByClassName("mdnsname");
+				var fullurl = "http://" + jsonObj['currentSettings']['accessPoint'][0] + "/";
+				for (var i=0; i<apspans.length; i++) {
+					if (apspans[i].hasChildNodes()) {
+						apspans[i].removeChild(apspans[i].firstChild);
+					}
+					apspans[i].appendChild(document.createTextNode(jsonObj['currentSettings']['accessPoint'][0]));
+				}
+				for (var i=0; i<mdns.length; i++) {
+					if (mdns[i].hasChildNodes()) {
+						mdns[i].removeChild(mdns[i].firstChild);
+					}
+					mdns[i].appendChild(document.createTextNode(fullurl));
+					mdns[i].setAttribute("href", fullurl); 
+				}
+				var apfield = document.getElementById("apname");
+				apfield.value = jsonObj['currentSettings']['accessPoint'][0]; 
 			}
 			
 			// make the PSK field inaccessible when the current net is active in the dropdown
@@ -254,12 +285,14 @@
 				var apradio = document.getElementById("accesspoint");
 				var clradio = document.getElementById("client");
 				var infobox = document.getElementById("infobox"); 
+				var apfield = document.getElementById("apname");
 				var vreq = new XMLHttpRequest();
 				// var vurl = "/wificonnect/";
 				if (netWorkJson['isap'] < 1 && dropdown.value == netWorkJson['ssid'] && clradio.checked == true) {
+					// client mode, selected network is current network
 					alert("No changes!"); 
 				} else if (netWorkJson['isap'] < 1 && apradio.checked == true) {
-					// switch to AP, show message
+					// switch to AP mode, show message
 					netbox.style.display = "none";
 					infobox.style.display = "block";
 					if (document.getElementById("infoswitch2ap-" + navigator.language)) {
@@ -268,6 +301,27 @@
 						document.getElementById("infoswitch2ap").style.display = "block";
 					}
 					vreq.open("GET", "/switchnet");
+					vreq.responseType = 'json';
+					vreq.send();
+					// this effectively breaks the connection
+				} else if (netWorkJson['isap'] > 0 && apradio.checked == true && versionInfo['currentSettings']['accessPoint'][0] != apfield.value.trim()) {
+					// Change the name of the current network
+					var apspans = document.getElementsByClassName("newapname");
+					for (var i=0; i<apspans.length; i++) {
+						if (apspans[i].hasChildNodes()) {
+							apspans[i].removeChild(apspans[i].firstChild);
+						}
+						apspans[i].appendChild(document.createTextNode(apfield.value.trim()));
+					}
+					netbox.style.display = "none";
+					infobox.style.display = "block";
+					if (document.getElementById("infoswitch2ap-" + navigator.language)) {
+						document.getElementById("infoswitch2ap-" + navigator.language).style.display = "block";
+					} else {
+						document.getElementById("infoswitch2ap").style.display = "block";
+					}
+					console.log("Setting AP name to " + apfield.value.trim() + ", please reconnect!"); 
+					vreq.open("GET", "/hostname/" + apfield.value.trim());
 					vreq.responseType = 'json';
 					vreq.send();
 					// this effectively breaks the connection
@@ -523,6 +577,11 @@ span.macbox {
 	width: 95%;
 }
 
+#morecontrols {
+	padding-top: 20px; 
+	width: 95%;
+}
+
 /* Tablet, grosse Smartphones im Querformat */ 
 @media (max-device-width: 960px) and (orientation: landscape), (min-device-width: 600px) and (orientation: portrait) {
 	#mainpage, #controlpage {
@@ -614,7 +673,7 @@ span.macbox {
 			<div id="infobox">
 				<div id="infoswitch2ap">
 					<p>The Eitech Robo Controller will now be switched to access point mode. 
-					Please connect your smart phone, tablet or PC to the access point "eitech-robo"
+					Please connect your smart phone, tablet or PC to the access point "<span class="newapname">eitech-robo</span>"
 					and navigate to <a href="http://192.168.1.1/">http://192.168.1.1/</a>.</p><p>If
 					you are unable to connect, press the button marked SW on the board for about 7
 					seconds to reconnect to the last used access point.</p>
@@ -622,15 +681,15 @@ span.macbox {
 				<div id="infoswitch2inf">
 					<p>The Eitech Robo Controller now connects to the chosen access point. Connect your
 					smart phone, tablet or PC to this access point as well. In most cases the Robo Controller 
-					then can be accessed by its MDNS name <a href="http://eitech-robo/">http://eitech-robo/</a>.
+					then can be accessed by its MDNS name <a href="http://eitech-robo/" class="mdnsname">http://eitech-robo/</a>.
 					If this is not the case go to the administration interface of your crouter and search for the network device with the MAC address <span class="macbox"></span>.</p><p>In case you cannot connect, reset the Robo Controllers network settings by pressing the switch labeled SW for about 7 seconds and repeat the configuration.</p>
 				</div>
 			
 				<div id="infoswitch2ap-de">
-					<p>Der Eitech Robo Controller wird jetzt in den Accesspoint Modus geschaltet. Bitte verbinden Sie Smartphone, Tablet oder PC mit dem Accesspoint "eitech-robo" und rufen Sie dann <a href="http://192.168.1.1/">http://192.168.1.1/</a> auf.</p><p>Falls Sie keine Verbindung herstellen k&ouml;nnen, dr&uuml;cken Sie 7 Sekunden lang den mit SW gekennzeichneten Taster auf der Robo Controller Platine um wieder mit dem eingerichteten Accesspoint zu verbinden.</p>
+					<p>Der Eitech Robo Controller wird jetzt in den Accesspoint Modus geschaltet. Bitte verbinden Sie Smartphone, Tablet oder PC mit dem Accesspoint "<span class="newapname">eitech-robo</span>" und rufen Sie dann <a href="http://192.168.1.1/">http://192.168.1.1/</a> auf.</p><p>Falls Sie keine Verbindung herstellen k&ouml;nnen, dr&uuml;cken Sie 7 Sekunden lang den mit SW gekennzeichneten Taster auf der Robo Controller Platine um wieder mit dem eingerichteten Accesspoint zu verbinden.</p>
 				</div>
 				<div id="infoswitch2inf-de">
-					<p>Der Eitech-Robo Controller verbindet nun mit dem ausgew&auml;hlten Accesspoint. Verbinden Sie Smartphone, Tablet oder PC ebenfalls mit dem ausgew&auml;hlten Accesspoint. Meist ist der Robo Controller dann unter dem MDNS Namen <a href="http://eitech-robo/">http://eitech-robo/</a> ansprechbar. Ist das nicht der Fall, ermitteln Sie im Webinterface des Routers die IP-Adresse des Clients mit der MAC-Adresse <span class="macbox"></span>.</p><p>Falls Sie keine Verbindung herstellen k&ouml;nnen, resetten Sie den Robo Controller und dr&uuml;cken Sie dann 7 Sekunden lang den mit SW gekennzeichneten Taster um wieder in den Accesspoint-Modus zu wechseln.</p>
+					<p>Der Eitech-Robo Controller verbindet nun mit dem ausgew&auml;hlten Accesspoint. Verbinden Sie Smartphone, Tablet oder PC ebenfalls mit dem ausgew&auml;hlten Accesspoint. Meist ist der Robo Controller dann unter dem MDNS Namen <a href="http://eitech-robo/" class="mdnsname">http://eitech-robo/</a> ansprechbar. Ist das nicht der Fall, ermitteln Sie im Webinterface des Routers die IP-Adresse des Clients mit der MAC-Adresse <span class="macbox"></span>.</p><p>Falls Sie keine Verbindung herstellen k&ouml;nnen, resetten Sie den Robo Controller und dr&uuml;cken Sie dann 7 Sekunden lang den mit SW gekennzeichneten Taster um wieder in den Accesspoint-Modus zu wechseln.</p>
 				</div>
 			</div>
 			<div id="netbox">
@@ -640,7 +699,7 @@ span.macbox {
 					<input type="radio" id="accesspoint" name="netmode" />
 					<label for="accesspoint">Accesspoint</label><br />
 					<label for="apname">ESSID:</label><br />
-					<input class="apinput" type="text" name="apname" size="40" value="eitech-robo"/><br />
+					<input class="apinput" type="text" name="apname" size="40" value="eitech-robo" id="apname" /><br />
 					<input type="radio" id="client" name="netmode" />
 					<label for="client">Client</label><br />
 					<label for="infname">ESSID:</label><br />
@@ -733,6 +792,9 @@ span.macbox {
 					<br />
 					<input type="submit" name="stop" class="fullwidthbutton" value="Stop">
 				</form>
+			</div>
+			<div id="morecontrols">
+				When a fully routed internet connection is available, this interface provides more controls. Future revisions of the firmware might allow offline usage of extended controls.
 			</div>
 		</div>
 	</body>

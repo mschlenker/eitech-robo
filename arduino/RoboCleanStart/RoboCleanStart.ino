@@ -12,7 +12,7 @@
 
 // #define SERIAL_DEBUG
 
-#define FLASH_ADDRESS 15
+#define FLASH_ADDRESS 31
 
 #define DIST_TRIGGER 14
 #define DIST_RECEIVE 13
@@ -35,6 +35,7 @@ bool connectWifi = false;
 int pressCount = 0;
 int timeOut = 500; // milliseconds needed between calls
 unsigned long uptime = 0;
+unsigned long lastHttpReq = 0;
 unsigned long duration = 0;  
 volatile int anemoTicks; 
 int anemoRpm = 0;
@@ -47,6 +48,7 @@ SimpleDHT22 dht22;
 
 SPIFlash flash(24);
 WiFiServer webserver(80); // webserver at port 80
+WiFiMDNSResponder mdnsResponder; // MDNS responder
 char *httpRequestURL; // HTTP request from client
 String jsonReply; // Reply data, usually JSON
 String preparedNetworks; // prepare networks in AP mode
@@ -64,7 +66,7 @@ const uint8_t pinMotor[4][2] = { { RM1A, RM1B }, { RM2A, RM2B }, { RM3A, RM3B },
 // char apName[12] = "eitech-robo";
 
 struct settings {
-  char fwVersion[14] = "20190903-1200";
+  char fwVersion[14] = "20190924-1650";
   bool isAp = true; 
   char apSSID[32] = "1234567890123456789012345678901";
   char apPSK[64] = "123456789012345678901234567890123456789012345678901234567890123";
@@ -89,11 +91,8 @@ settings flashSettings;
 bool startWifi() {
   int status;
   WiFi.end();
+  WiFi.hostname(defSettings.apSSID); 
   // read config to determine whether running an access point or connecting to an existing network
-  // bool isAP = false;
-  // char *ssid = DEFSSID;
-  // char *password = DEFPASSWORD;
-  // WiFi.hostname(mdnsName); //use MDNS name as host name (DHCP option 12)
 
   if (defSettings.isAp) {
     // Create list of ESSIDs nearby first
@@ -335,7 +334,7 @@ void listNetworks(bool apMode) {
   jsonReply += WiFi.RSSI();
   jsonReply += ", \"addr\" : \"";
   IPAddress ip = WiFi.localIP();
-  for (int j = 4; j > 0; j--) {
+  for (int j = 0; j < 4; j++) {
     jsonReply += ip[j];
     if (j<3) jsonReply += ".";
   }
@@ -603,9 +602,15 @@ void setServoPos(int snum, int spos) {
 
 void setup() {
   char defAp[] = "eitech-robo"; 
-  strcpy(defSettings.apSSID, defAp); 
+  char defPSK[] = "empty";
+  strcpy(defSettings.apSSID, defAp);
+  strcpy(defSettings.apPSK, defPSK);
+  strcpy(defSettings.infSSID, defAp);
+  strcpy(defSettings.infPSK, defPSK);
+  defSettings.isAp = true; 
   // defSettings.apSSID = defAp; 
   backupSettings = defSettings; 
+  flashSettings = defSettings;
   pinMode(DIST_TRIGGER, OUTPUT);
   pinMode(DIST_RECEIVE, INPUT);
   
@@ -626,6 +631,7 @@ void setup() {
   #endif
     
   flash.begin();
+  flash.powerUp();
   flash.setClock(1000000); 
   #ifdef SERIAL_DEBUG
   Serial.println(flash.getCapacity());
@@ -641,20 +647,16 @@ void setup() {
     #endif
     defSettings = flashSettings; 
     #ifdef SERIAL_DEBUG
-    Serial.println(defSettings.infSSID);
-    Serial.println(defSettings.isAp);
+    Serial.println(flashSettings.infSSID);
+    Serial.println(flashSettings.isAp);
     #endif
   } else {
     #ifdef SERIAL_DEBUG
-    Serial.println(flashSettings.fwVersion);
-    Serial.println(flashSettings.infSSID);
-    Serial.println(flashSettings.infPSK);
-    Serial.println(flashSettings.isAp);
     Serial.println("Writing default config to flash..."); 
     #endif
     // flash.eraseSection(VERS_ADDRESS, 12);
-    flash.eraseSection(FLASH_ADDRESS, sizeof(backupSettings));
-    flash.writeAnything(FLASH_ADDRESS, backupSettings);
+    flash.eraseSection(FLASH_ADDRESS, sizeof(defSettings));
+    flash.writeAnything(FLASH_ADDRESS, defSettings);
     // flash.writeCharArray(VERS_ADDRESS, backupSettings.fwVersion, 12);
     flash.readAnything(FLASH_ADDRESS, flashSettings);
   }
@@ -694,7 +696,7 @@ void setup() {
 
 void loop() {
   if (timeOut > 0) {
-    if (millis() - uptime > timeOut) {
+    if (millis() - lastHttpReq > timeOut && timeOut > 0) {
       stopEverything(); 
     }
   }
@@ -761,6 +763,7 @@ void loop() {
 
     while (client.connected()) {
       if (client.available()) {
+        lastHttpReq = millis();
         char c = client.read();
         if (httpRequestLen < (sizeof(httpRequest) - 1)) {
           httpRequest[httpRequestLen++] = c;
@@ -815,6 +818,20 @@ void loop() {
               }
               client.write(outBuff);
               connectWifi = true;
+              break;
+            } else if (httpGetResource(0) == "hostname") {
+              httpGetResource(1).toCharArray(defSettings.apSSID, 32);
+              jsonReply = "{ ";
+              getVoltage();
+              jsonReply += " }\n";
+              client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
+              for ( int i = 0 ; i < jsonReply.length() ; i++) {
+                outBuff[i] = jsonReply.charAt(i);
+                // client.write(jsonReply.charAt(i));
+              }
+              client.write(outBuff);
+              connectWifi = true;
+              writeFlash();
               break;
             } else if (httpGetResource(0) == "write") {
               writeFlash(); 

@@ -105,6 +105,10 @@ curl -v http://10.76.23.155/wificonnect/pinguinbaendiger/12345678901234567890
 
 Closes the connection!
 
+/hostname/<new-hostname>
+
+Sets the MDNS hostname that is also used as accesspoint name
+
 /switchnet
 
 curl -v http://10.76.23.155/switchnet
