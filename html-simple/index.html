@@ -229,6 +229,16 @@
 				return false; 
 			}
 		
+			function updateVoltage(vinfo) {
+				if (vinfo['vbat']) {
+					var td = document.getElement("batteryvoltage");
+					if (td.hasChildNodes()) {
+						td.removeChild(td.childNodes[0]);
+					}
+					txt = document.createTextNode(vinfo['vbat'] + "V");
+					td.appendChild(txt);
+				}
+			}
 			
 			// wire imprint link
 			function wirelinks() {
@@ -359,6 +369,11 @@
 							vreq.open("GET", "/timeout/" + ifield.value);
 							vreq.responseType = 'json';
 							vreq.send();
+							var vinfo;
+							vreq.onload = function() { 
+								vinfo = vreq.response;  
+								updateVoltage(vinfo);
+							};
 							console.log(ifield.value);
 							return false; 
 						}
@@ -372,6 +387,11 @@
 									vreq.open("GET", "/setservo/0/" + ins[i].value);
 									vreq.responseType = 'json';
 									vreq.send();
+									var vinfo;
+									vreq.onload = function() { 
+										vinfo = vreq.response;  
+										updateVoltage(vinfo);
+									};
 								}
 							}
 							return false;
@@ -386,6 +406,11 @@
 									vreq.open("GET", "/setservo/1/" + (180 - ins[i].value));
 									vreq.responseType = 'json';
 									vreq.send();
+									var vinfo;
+									vreq.onload = function() { 
+										vinfo = vreq.response;  
+										updateVoltage(vinfo);
+									};
 								}
 							}
 							return false;
@@ -400,6 +425,11 @@
 									vreq.open("GET", "/setswitch/" + ins[i].value);
 									vreq.responseType = 'json';
 									vreq.send();
+									var vinfo;
+									vreq.onload = function() { 
+										vinfo = vreq.response;  
+										updateVoltage(vinfo);
+									};
 								}
 							}
 							return false;
@@ -422,6 +452,11 @@
 							vreq.open("GET", "/setmotor/" + ms[0] + "/0/" + ms[1] + "/0");
 							vreq.responseType = 'json';
 							vreq.send();
+							var vinfo;
+							vreq.onload = function() { 
+								vinfo = vreq.response;  
+								updateVoltage(vinfo);
+							};
 							return false; 
 						}
 					} else {
@@ -431,6 +466,11 @@
 							vreq.open("GET", "/stop");
 							vreq.responseType = 'json';
 							vreq.send();
+							var vinfo;
+							vreq.onload = function() { 
+								vinfo = vreq.response;  
+								updateVoltage(vinfo);
+							};
 							var frm = document.getElementById("caterpillarform");
 							var ins = form.getElementsByTagName("input");
 							for (var i=0; i<ins.length; i++) {
@@ -759,7 +799,7 @@ span.macbox {
 		<div id="controlpage">
 			<table id="statustable">
 				<tr>
-					<td>Battery voltage:</td><td></td>
+					<td>Battery voltage:</td><td id="batteryvoltage"></td>
 				</tr>
 				<tr>
 					<td>WiFi firmware:</td><td></td>

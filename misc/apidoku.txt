@@ -51,6 +51,20 @@ curl -v http://10.76.23.155/stop
 { "stopped" : 1, 
  "vbat" : 4.78 }
 
+/test
+
+Switch to testmode
+
+/demo/<rotateTime>/<obstacleDistance>/<slideTime>
+
+Switches to autonomous demo mode
+
+Microswitches that are NC configured must be connected to J1 (right side) and J3 (left side), microswitch connects IO and GND, and HC-SR04 to UART. RotateTime is milliseconds to rotate when the vehicle frontally approaches an obstacle. ObstacleDistance is the value in microseconds sound travels forth and back to the sensor. 3000µs means approx. 50cm distance, max 20000µs. Slide time is milliseconds to rotate when microswitches detect the obstacle has been hit. Typically you want to set rotate time to 1500-3000ms to rotate about 90deg, obstacle distance to 2000-4000µs (33-67cm) and slide to 500-1500ms (10-30deg, since only one side is moved).
+
+Example (with default values):
+
+curl -v http://10.76.23.155/demo/2000/3000/1000
+
 /getwifi
 
 List all WIFI networks in your neighborhood and show the current connection:
