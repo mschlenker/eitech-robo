@@ -1,6 +1,13 @@
+
+// #define SERIAL_DEBUG
+// #define MOTOR_FULLSPEED
+// #define NO_FLASH
+
 #include <WiFi101.h>
 #include <WiFiMDNSResponder.h>
-#include <SPIMemory.h>
+#ifndef NO_FLASH
+  #include <SPIMemory.h>
+#endif
 #include <Servo.h>
 #include <SimpleDHT.h>
 #include "qr23_png.h"
@@ -10,11 +17,7 @@
 #include "eitech_png.h"
 #include "index_html.h"
 
-// #define SERIAL_DEBUG
-// #define MOTOR_FULLSPEED
-
 #define FLASH_ADDRESS 31
-
 #define DIST_TRIGGER 14
 #define DIST_RECEIVE 13
 #define MAX_PACKET_LEN 1400
@@ -38,6 +41,7 @@ int timeOut = 500; // milliseconds needed between calls
 unsigned long uptime = 0;
 unsigned long lastHttpReq = 0;
 unsigned long duration = 0;  
+unsigned long lastServoSet = 0;
 volatile int anemoTicks; 
 int anemoRpm = 0;
 unsigned long lastAnemoRollback = 0; 
@@ -47,7 +51,10 @@ Servo servoL;
 Servo servoR; 
 SimpleDHT22 dht22;
 
+#ifndef NO_FLASH
 SPIFlash flash(24);
+#endif
+
 WiFiServer webserver(80); // webserver at port 80
 WiFiMDNSResponder mdnsResponder; // MDNS responder
 char *httpRequestURL; // HTTP request from client
@@ -61,7 +68,8 @@ char outBuff[OUTPUT_BUFFER];
 // maximum voltage for M1-M4 and S1
 // int maxVoltage[5] = { 0, 0, 0, 0, 0 };
 int motorSpeed[5] = { 0, 0, 0, 0, 0 };
-int jpins[5] = { J1, J2, J3, J4, J7 }; 
+int jpins[7] = { J1, J2, J3, J4, J5, J6, J7 }; 
+int servoQueue[3] = { 90, 90, 90 }; 
 const uint8_t pinMotor[4][2] = { { RM1A, RM1B }, { RM2A, RM2B }, { RM3A, RM3B }, { RM4A, RM4B } };
 bool testMode = false;
 unsigned long lastModeChange = 0; 
@@ -75,7 +83,7 @@ unsigned long slideTime = 1000; // milliseconds to rotate when microswitches det
 // char apName[12] = "eitech-robo";
 
 struct settings {
-  char fwVersion[14] = "20191018-1515";
+  char fwVersion[14] = "20191023-1300";
   bool isAp = true; 
   char apSSID[32] = "1234567890123456789012345678901";
   char apPSK[64] = "123456789012345678901234567890123456789012345678901234567890123";
@@ -147,6 +155,9 @@ void changeMode() {
   // 1: input - also use for DHT22 on J2!
   // 2: input_pullup - for interrupt, J7 only
   // 3: servo - currently only pin J6 and J7 - changes need reboot!
+  // 4: endstop - J1 lower endstop for M1, J2 upper endstop for M1, 
+  //    J3 and J4 for M3, J5 and J6 for M4, no endstops for M2
+  // 5: endstop as above, but NO ("normally open") 
   for (int i=0; i<7; i++) {
     if (defSettings.pinMode[i] == 0) {
       pinMode(jpins[i], OUTPUT); 
@@ -160,6 +171,8 @@ void changeMode() {
       }
     } else if (defSettings.pinMode[i] == 3) {
       // Do nothing! Servos are attached upon startup!
+    } else if (defSettings.pinMode[i] > 3 /* 4 and 5! */ ) {
+      pinMode(jpins[i], INPUT_PULLUP); 
     }
   }
 }
@@ -169,6 +182,7 @@ void anemoCount() {
 }
 
 void writeFlash() {
+  #ifndef NO_FLASH
   flash.powerUp();
   flash.eraseSection(FLASH_ADDRESS, sizeof(defSettings));
   flash.writeAnything(FLASH_ADDRESS, defSettings);
@@ -176,13 +190,16 @@ void writeFlash() {
   // flash.eraseSection(VERS_ADDRESS, 12);
   // flash.writeCharArray(VERS_ADDRESS, backupSettings.fwVersion, 12);
   flash.powerDown();
+  #endif
 }
 
 void resetToDefaults() {
+  #ifndef NO_FLASH
   flash.powerUp();
   flash.eraseSection(FLASH_ADDRESS, sizeof(defSettings));
   flash.writeAnything(FLASH_ADDRESS, backupSettings);
   flash.powerDown();
+  #endif
 }
 
 /*
@@ -489,7 +506,64 @@ void setSwitch(int value) {
 void setMotorSpeed(int motorNr, int value, bool brakes = false) {
   int in1, in2;
   int rawVoltage;
+  int endstop;
   if ((motorNr >= 1) && (motorNr <= 4)) {
+    // first check the endstops: 
+    if (motorNr == 1 && defSettings.pinMode[0] > 3 && value < 0) {
+      endstop = digitalRead(jpins[0]);
+      if (defSettings.pinMode[0] == 4 && endstop == HIGH) {
+        // M1 lower endstop NC reached
+        value = 0;
+      } else if (defSettings.pinMode[0] == 5 && endstop == LOW) {
+        // M1 lower endstop NO reached
+        value = 0;
+      }
+    } else if (motorNr == 1 && defSettings.pinMode[1] > 3 && value > 0) {
+      endstop = digitalRead(jpins[1]);
+      if (defSettings.pinMode[1] == 4 && endstop == HIGH) {
+        // M1 upper endstop NC reached
+        value = 0;
+      } else if (defSettings.pinMode[1] == 5 && endstop == LOW) {
+        // M1 upper endstop NO reached
+        value = 0;
+      }
+    } else if (motorNr == 3 && defSettings.pinMode[2] > 3 && value < 0) {
+      endstop = digitalRead(jpins[2]);
+      if (defSettings.pinMode[2] == 4 && endstop == HIGH) {
+        // M3 lower endstop NC reached
+        value = 0;
+      } else if (defSettings.pinMode[2] == 5 && endstop == LOW) {
+        // M3 lower endstop NO reached
+        value = 0;
+      }
+    } else if (motorNr == 3 && defSettings.pinMode[3] > 3 && value > 0) {
+      endstop = digitalRead(jpins[3]);
+      if (defSettings.pinMode[3] == 4 && endstop == HIGH) {
+        // M3 upper endstop NC reached
+        value = 0;
+      } else if (defSettings.pinMode[3] == 5 && endstop == LOW) {
+        // M3 upper endstop NO reached
+        value = 0;
+      }
+    } else if (motorNr == 4 && defSettings.pinMode[4] > 3 && value < 0) {
+      endstop = digitalRead(jpins[4]);
+      if (defSettings.pinMode[4] == 4 && endstop == HIGH) {
+        // M4 lower endstop NC reached
+        value = 0;
+      } else if (defSettings.pinMode[4] == 5 && endstop == LOW) {
+        // M4 lower endstop NO reached
+        value = 0;
+      } 
+    } else if (motorNr == 4 && defSettings.pinMode[5] > 3 && value < 0) {
+      endstop = digitalRead(jpins[5]);
+      if (value > 0 && defSettings.pinMode[5] == 4 && endstop == HIGH) {
+        // M4 upper endstop NC reached
+        value = 0;
+      } else if (value > 0 && defSettings.pinMode[5] == 5 && endstop == LOW) {
+        // M4 upper endstop NO reached
+        value = 0;
+      }
+    }
     motorNr--;
     int absMax = 255;
     motorSpeed[motorNr] = value;
@@ -568,6 +642,25 @@ void setMotorSpeed(int motorNr, int value, bool brakes = false) {
   }
 }
 
+void checkEndstops() {
+  int pinval = 0;
+  for (int i=0; i<6; i++) {
+    if (defSettings.pinMode[i] > 3) {
+      pinval = digitalRead(jpins[i]);
+      if ( (defSettings.pinMode[i] == 4 && pinval == HIGH) ||
+        (defSettings.pinMode[i] == 5 && pinval == LOW) ) {
+          if (i < 2) {
+            setMotorSpeed(1, 0);
+          } else if (i < 4) {
+            setMotorSpeed(3, 0);
+          } else {
+            setMotorSpeed(4, 0);
+          }
+        }
+    }
+  }
+}
+
 /*
    split HTTP request string
 */
@@ -642,6 +735,7 @@ void stopEverything() {
   jsonReply += " }\n";
 }
 
+// obsolete FIXME, clean out
 void setServoPos(int snum, int spos) {
         if (snum == 0 && defSettings.pinMode[6] == 3) {
                 servoR.write(spos);
@@ -650,6 +744,20 @@ void setServoPos(int snum, int spos) {
         } else if (snum == 2 && defSettings.pinMode[4] == 3) {
                 servoA.write(spos);
         }
+}
+
+void clearServoQueue() {
+  for (int i=0; i<3; i++) {
+    if (i == 0 && defSettings.pinMode[6] == 3 && servoQueue[i] > -1) {
+      servoR.write(servoQueue[i]);
+    } else if (i == 1 && defSettings.pinMode[5] == 3 && servoQueue[i] > -1) {
+      servoL.write(servoQueue[i]);
+    } else if (i == 2 && defSettings.pinMode[4] == 3 && servoQueue[i] > -1) {
+      servoA.write(servoQueue[i]);
+    }
+    servoQueue[i] = -1;
+  }
+  lastServoSet = millis();
 }
 
 void setup() {
@@ -691,7 +799,8 @@ void setup() {
   Serial.begin(9600);
   while (!Serial) { /* wait for serial port to connect */ } 
   #endif
-    
+
+  #ifndef NO_FLASH  
   flash.begin();
   flash.powerUp();
   flash.setClock(1000000); 
@@ -701,6 +810,7 @@ void setup() {
   flash.readAnything(FLASH_ADDRESS, flashSettings);
   // char flashVersion[12];
   // flash.readCharArray(VERS_ADDRESS, flashVersion, 12);
+  #endif 
   
   if ( memcmp( (const void *)flashSettings.fwVersion, (const void *)backupSettings.fwVersion, sizeof(backupSettings.fwVersion)) == 0) {
   // if ( memcmp( (const void *)flashVersion, (const void *)backupSettings.fwVersion, sizeof(backupSettings.fwVersion)) == 0) {
@@ -717,10 +827,12 @@ void setup() {
     Serial.println("Writing default config to flash..."); 
     #endif
     // flash.eraseSection(VERS_ADDRESS, 12);
+    #ifndef NO_FLASH  
     flash.eraseSection(FLASH_ADDRESS, sizeof(defSettings));
     flash.writeAnything(FLASH_ADDRESS, defSettings);
     // flash.writeCharArray(VERS_ADDRESS, backupSettings.fwVersion, 12);
     flash.readAnything(FLASH_ADDRESS, flashSettings);
+    #endif
   }
   if (defSettings.pinMode[4] == 3) {
     servoA.attach(J5);
@@ -872,7 +984,8 @@ void loop() {
         delay(250); 
       }
     }
-  }  
+  }
+  if (millis() - lastServoSet > 80) { clearServoQueue(); }
   if (timeOut > 0) {
     if (millis() - lastHttpReq > timeOut && timeOut > 0) {
       stopEverything(); 
@@ -1182,7 +1295,8 @@ void loop() {
               break;
             } else if (httpGetResource(0) == "setservo") {
               // Serial.println("Setting motors");
-              setServoPos(httpGetResource(1).toInt(), httpGetResource(2).toInt());
+              // setServoPos(httpGetResource(1).toInt(), httpGetResource(2).toInt());
+              servoQueue[httpGetResource(1).toInt()] = httpGetResource(2).toInt();
               jsonReply = "{ ";
               getVoltage();
               jsonReply += " }\n";
@@ -1216,7 +1330,9 @@ void loop() {
               // 0: output
               // 1: input - also use for DHT22 on J2!
               // 2: input_pullup - for interrupt, J7 only
-              // 3: servo - currently only pin J6 and J7 - changes need reboot!
+              // 3: servo - currently pin J7, J6 and J5 - changes here need reboot!
+              // 4: endstop NC (typical configuration for microswitches)
+              // 5: endstop NO (reed contact)
               for (int i=0; i<7; i++) {
                 if (httpGetResource(i+1) != "") {
                   defSettings.pinMode[i] = httpGetResource(i+1).toInt();
@@ -1241,7 +1357,7 @@ void loop() {
               // Serial.println("Setting analogue output on J1 to J7");
               for (int i=0; i<7; i++) {
                   if (httpGetResource(i+1) != "") {
-                    if (defSettings.pinMode[i] < 3) {
+                    if (defSettings.pinMode[i] == 0) {
                       analogWrite(jpins[i], httpGetResource(i+1).toInt()); 
                     }
                   }
@@ -1263,7 +1379,7 @@ void loop() {
             } else if (httpGetResource(0) == "getanalog") {
               // Serial.println("Getting analogue input on J1 to J5");
               int value = -1;
-              int idx = 0;
+              int idx = -1;
               if (httpGetResource(1) == "j1" || httpGetResource(1) == "J1") {
                 idx = 0;
               } else if (httpGetResource(1) == "j2" || httpGetResource(1) == "J2") {
@@ -1272,8 +1388,12 @@ void loop() {
                 idx = 2;
               } else if (httpGetResource(1) == "j4" || httpGetResource(1) == "J4") {
                 idx = 3;
-              } else if (httpGetResource(1) == "j7" || httpGetResource(1) == "J7") {
+              } else if (httpGetResource(1) == "j5" || httpGetResource(1) == "J5") {
                 idx = 4;
+              } else if (httpGetResource(1) == "j6" || httpGetResource(1) == "J6") {
+                idx = 5;
+              } else if (httpGetResource(1) == "j7" || httpGetResource(1) == "J7") {
+                idx = 6;
               }
               if (idx>-1 && defSettings.pinMode[idx] == 1) {
                 value = analogRead(jpins[idx]); 
