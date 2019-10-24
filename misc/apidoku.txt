@@ -11,7 +11,7 @@ curl -v http://10.76.23.155/get
 "version" : "20190809-1045 ", 
 "isAp" : 0,
  "accessPoint" : [ "eitech-robo", "123456789012345678901234567890123456789012345678901234567890123" ],
- "infraClient" : [ "pinguinbaendiger", "8831769357215102" ],
+ "infraClient" : [ "pinguinbaendiger", "xxxxxxxxxxxxxxx" ],
  "maxVoltage" : [ 0, 0, 0, 0, 0 ],
  "motorInvert" : [ 0, 0, 0, 0 ],
  "servoInvert" : [ 0, 0 ],
@@ -21,7 +21,7 @@ curl -v http://10.76.23.155/get
 "version" : "20190809-1045 ", 
 "isAp" : 0,
  "accessPoint" : [ "eitech-robo", "123456789012345678901234567890123456789012345678901234567890123" ],
- "infraClient" : [ "pinguinbaendiger", "8831769357215102" ],
+ "infraClient" : [ "pinguinbaendiger", "xxxxxxxxxxxxx" ],
  "maxVoltage" : [ 0, 0, 0, 0, 0 ],
  "motorInvert" : [ 0, 0, 0, 0 ],
  "servoInvert" : [ 0, 0 ],
@@ -188,6 +188,8 @@ Set pinmodes for J1 to J7. Default 0 is output, 1 is INPUT, omitted trailing pin
   // 1: input - also use for DHT22 on J2!
   // 2: input_pullup - for interrupt, J7 only
   // 3: servo - currently only pin J5 to J7 - changes need reset!
+  // 4: endstop NC (typical configuration for microswitches)
+  // 5: endstop NO (reed contact)
 
 Example:
 

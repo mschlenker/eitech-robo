@@ -45,6 +45,7 @@ unsigned long lastServoSet = 0;
 volatile int anemoTicks; 
 int anemoRpm = 0;
 unsigned long lastAnemoRollback = 0; 
+char defConfigDescription[] = "Eitech-Robo-Caterpillar-v1.1";
 
 Servo servoA;
 Servo servoL;
@@ -68,6 +69,7 @@ char outBuff[OUTPUT_BUFFER];
 // maximum voltage for M1-M4 and S1
 // int maxVoltage[5] = { 0, 0, 0, 0, 0 };
 int motorSpeed[5] = { 0, 0, 0, 0, 0 };
+int servoPos[3] = { -1, -1, -1 };
 int jpins[7] = { J1, J2, J3, J4, J5, J6, J7 }; 
 int servoQueue[3] = { 90, 90, 90 }; 
 const uint8_t pinMotor[4][2] = { { RM1A, RM1B }, { RM2A, RM2B }, { RM3A, RM3B }, { RM4A, RM4B } };
@@ -83,7 +85,7 @@ unsigned long slideTime = 1000; // milliseconds to rotate when microswitches det
 // char apName[12] = "eitech-robo";
 
 struct settings {
-  char fwVersion[14] = "20191023-1300";
+  char fwVersion[14] = "20191024-0900";
   bool isAp = true; 
   char apSSID[32] = "1234567890123456789012345678901";
   char apPSK[64] = "123456789012345678901234567890123456789012345678901234567890123";
@@ -94,6 +96,7 @@ struct settings {
   bool motorInvert[4] = { false, false, false, false };
   bool servoInvert[2] = { false, false };
   uint8_t pinMode[7] = { 0, 1, 0, 0, 0, 3, 3 };
+  char configDescription[32] =  "1234567890123456789012345678901";
 };
 
 settings defSettings;
@@ -259,6 +262,24 @@ void getVoltage() {
   jsonReply += (value * 3.3 * (62 + 14) / (14 * 1024)); // implicit conversion to string
 }
 
+void getMotorSpeeds() {
+  jsonReply += " \"motorspeeds\" : [ ";
+  for (int i=0; i<5; i++) {
+    jsonReply += motorSpeed[i];
+    if (i<4) jsonReply += " , ";
+  }
+  jsonReply += " ] ";
+}
+
+void getServoPos() {
+  jsonReply += " \"servopos\" : [ ";
+  for (int i=0; i<3; i++) {
+    jsonReply += servoPos[i];
+    if (i<2) jsonReply += " , ";
+  }
+  jsonReply += " ] ";
+}
+
 /*
  * Timeout is in microseconds!
  */
@@ -282,7 +303,9 @@ void printSettings(settings sets, char description[16]) {
   jsonReply += description;
   jsonReply += "\" : {\n\"version\" : \"";
   jsonReply += sets.fwVersion;
-  jsonReply += " \", \n\"isAp\" : ";
+  jsonReply += "\", \n\"configDescription\" : ";
+  jsonReply += sets.configDescription;
+  jsonReply += "\", \n\"isAp\" : ";
   jsonReply += sets.isAp;
   jsonReply += ",\n \"accessPoint\" : [ \"";
   jsonReply += sets.apSSID;
@@ -456,17 +479,12 @@ bool setMaxVoltage(String outport, String volt) {
 }
 
 void getMaxVoltages() {
-  jsonReply = "{ \"maxvoltages\" : [ \n";
+  jsonReply += "\"maxvoltages\" : [ \n";
   for (int i = 0; i < 5; i++) {
     jsonReply += defSettings.maxVoltage[i];
-    jsonReply += ", ";
+    if (i<4) jsonReply += " , ";
   }
-  jsonReply += "\n], \"motorspeeds\" : [ \n";
-  for (int i = 0; i < 5; i++) {
-    jsonReply += motorSpeed[i];
-    jsonReply += ", ";
-  }
-  jsonReply += "\n] }\n";
+  jsonReply += " ] ";
 }
 
 void setSwitch(int value) {
@@ -649,11 +667,14 @@ void checkEndstops() {
       pinval = digitalRead(jpins[i]);
       if ( (defSettings.pinMode[i] == 4 && pinval == HIGH) ||
         (defSettings.pinMode[i] == 5 && pinval == LOW) ) {
-          if (i < 2) {
+          if ( (i == 0 && motorSpeed[0] < 0) ||
+            (i == 1 && motorSpeed[0] > 0) ) {
             setMotorSpeed(1, 0);
-          } else if (i < 4) {
+          } else if ( (i == 2 && motorSpeed[2] < 0) ||
+            (i == 3 && motorSpeed[2] > 0) ) {
             setMotorSpeed(3, 0);
-          } else {
+          } else if ( (i == 4 && motorSpeed[3] < 0) ||
+            (i == 5 && motorSpeed[3] > 0) ){
             setMotorSpeed(4, 0);
           }
         }
@@ -735,7 +756,7 @@ void stopEverything() {
   jsonReply += " }\n";
 }
 
-// obsolete FIXME, clean out
+// obsolete? FIXME, clean out
 void setServoPos(int snum, int spos) {
         if (snum == 0 && defSettings.pinMode[6] == 3) {
                 servoR.write(spos);
@@ -777,6 +798,7 @@ void setup() {
   strcpy(defSettings.apPSK, defPSK);
   strcpy(defSettings.infSSID, defAp);
   strcpy(defSettings.infPSK, defPSK);
+  strcpy(defSettings.configDescription, defConfigDescription);
   defSettings.isAp = true; 
   // defSettings.apSSID = defAp; 
   backupSettings = defSettings; 
@@ -837,14 +859,17 @@ void setup() {
   if (defSettings.pinMode[4] == 3) {
     servoA.attach(J5);
     setServoPos(2, 90);
+    servoPos[2] = 90;
   }
   if (defSettings.pinMode[5] == 3) {
     servoL.attach(J6);
     setServoPos(1, 90);
+    servoPos[1] = 90;
   }
   if (defSettings.pinMode[6] == 3) {
     servoR.attach(J7);
     setServoPos(0, 90);
+    servoPos[0] = 90;
   }
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(PIN_A2, INPUT);
@@ -889,6 +914,7 @@ void setup() {
 }
 
 void loop() {
+  checkEndstops();
   if (testMode == true) {
     timeOut = 0;
     if (millis() - lastModeChange > 5000) {
@@ -1097,7 +1123,8 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "test") {
+            } 
+            else if (httpGetResource(0) == "test") {
               testMode = true; 
               jsonReply = "{ ";
               getVoltage();
@@ -1112,7 +1139,8 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "demo") {
+            } 
+            else if (httpGetResource(0) == "demo") {
               pinMode(15, INPUT_PULLUP);
               pinMode(18, INPUT_PULLUP); 
               delay(5);
@@ -1136,7 +1164,8 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "wificonnect") {
+            }
+            else if (httpGetResource(0) == "wificonnect") {
               httpGetResource(1).toCharArray(defSettings.infSSID, 32);
               httpGetResource(2).toCharArray(defSettings.infPSK, 64);
               defSettings.isAp = false;
@@ -1156,7 +1185,8 @@ void loop() {
               connectWifi = true;
               writeFlash();
               break;
-            } else if (httpGetResource(0) == "switchnet") {
+            } 
+            else if (httpGetResource(0) == "switchnet") {
               defSettings.isAp = !defSettings.isAp;
               jsonReply = "{ ";
               getVoltage();
@@ -1169,7 +1199,8 @@ void loop() {
               client.write(outBuff);
               connectWifi = true;
               break;
-            } else if (httpGetResource(0) == "hostname") {
+            }
+            else if (httpGetResource(0) == "hostname") {
               httpGetResource(1).toCharArray(defSettings.apSSID, 32);
               jsonReply = "{ ";
               getVoltage();
@@ -1187,7 +1218,8 @@ void loop() {
               connectWifi = true;
               writeFlash();
               break;
-            } else if (httpGetResource(0) == "write") {
+            }
+            else if (httpGetResource(0) == "write") {
               writeFlash(); 
               jsonReply = "{ ";
               getVoltage();
@@ -1203,7 +1235,8 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "timeout") {
+            }
+            else if (httpGetResource(0) == "timeout") {
               timeOut = httpGetResource(1).toInt();
               jsonReply = "{ ";
               getVoltage();
@@ -1219,7 +1252,8 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "getdistance") { 
+            }
+            else if (httpGetResource(0) == "getdistance") { 
               int timeout = httpGetResource(1).toInt();
               jsonReply = "{ ";
               getDistance(timeout);
@@ -1237,7 +1271,8 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "get") {
+            }
+            else if (httpGetResource(0) == "get") {
               // Serial.println("Get current state");
               jsonReply = "{ ";
               printSettings(defSettings, "currentSettings");
@@ -1248,6 +1283,12 @@ void loop() {
               jsonReply += ", \n";
               getNet();
               getVoltage();
+              jsonReply += " , \n ";
+              getMaxVoltages();
+              jsonReply += " , \n ";
+              getMotorSpeeds(); 
+              jsonReply += " , \n ";
+              getServoPos(); 
               jsonReply += " }\n";
               client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
@@ -1260,13 +1301,22 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "setmotor") {
+            }
+            else if (httpGetResource(0) == "setmotor") {
               // Serial.println("Setting motors");
               setMotorSpeed(1, httpGetResource(1).toInt());
               setMotorSpeed(2, httpGetResource(2).toInt());
               setMotorSpeed(3, httpGetResource(3).toInt());
               setMotorSpeed(4, httpGetResource(4).toInt());
+              jsonReply = "{ ";
+              getVoltage();
+              jsonReply += " , \n ";
               getMaxVoltages();
+              jsonReply += " , \n ";
+              getMotorSpeeds(); 
+              jsonReply += " , \n ";
+              getServoPos(); 
+              jsonReply += "\n}\n";
               client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
@@ -1278,10 +1328,19 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "setswitch") {
+            }
+            else if (httpGetResource(0) == "setswitch") {
               // Serial.println("Setting motors");
               setSwitch(httpGetResource(1).toInt());
+              jsonReply = "{ ";
+              getVoltage();
+              jsonReply += " , \n ";
               getMaxVoltages();
+              jsonReply += " , \n ";
+              getMotorSpeeds(); 
+              jsonReply += " , \n ";
+              getServoPos(); 
+              jsonReply += "\n}\n";
               client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
@@ -1293,13 +1352,21 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "setservo") {
+            }
+            else if (httpGetResource(0) == "setservo") {
               // Serial.println("Setting motors");
               // setServoPos(httpGetResource(1).toInt(), httpGetResource(2).toInt());
               servoQueue[httpGetResource(1).toInt()] = httpGetResource(2).toInt();
+              servoPos[httpGetResource(1).toInt()] = httpGetResource(2).toInt();
               jsonReply = "{ ";
               getVoltage();
-              jsonReply += " }\n";
+              jsonReply += " , \n ";
+              getMaxVoltages();
+              jsonReply += " , \n ";
+              getMotorSpeeds(); 
+              jsonReply += " , \n ";
+              getServoPos(); 
+              jsonReply += "\n}\n";
               client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
               for ( int i = 0 ; i < jsonReply.length() ; i++) {
                 outBuff[i] = jsonReply.charAt(i);
@@ -1311,7 +1378,8 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "getwifi") {
+            }
+            else if (httpGetResource(0) == "getwifi") {
               // Serial.println("Getting WiFi parameters and networks");
               listNetworks(defSettings.isAp);
               client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
@@ -1325,7 +1393,8 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "setmode") {
+            }
+            else if (httpGetResource(0) == "setmode") {
               // Pin modes are
               // 0: output
               // 1: input - also use for DHT22 on J2!
@@ -1353,7 +1422,8 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "setanalog") {
+            }
+            else if (httpGetResource(0) == "setanalog") {
               // Serial.println("Setting analogue output on J1 to J7");
               for (int i=0; i<7; i++) {
                   if (httpGetResource(i+1) != "") {
@@ -1376,8 +1446,9 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "getanalog") {
-              // Serial.println("Getting analogue input on J1 to J5");
+            }
+            else if (httpGetResource(0) == "getanalog") {
+              // Serial.println("Getting analogue input on J1 to J7");
               int value = -1;
               int idx = -1;
               if (httpGetResource(1) == "j1" || httpGetResource(1) == "J1") {
@@ -1416,7 +1487,8 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "setmax") {
+            }
+            else if (httpGetResource(0) == "setmax") {
               // Serial.println("Setting maximum voltage of motors M1 to m4");
               setMaxVoltage(httpGetResource(1), httpGetResource(2));
               client.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n");
@@ -1430,7 +1502,8 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "getrpm") {
+            }
+            else if (httpGetResource(0) == "getrpm") {
               // Serial.println("Get the distance of HC-SR04");
               // modes of port: 0 output
               //                1 input
@@ -1452,7 +1525,8 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "getdht") {
+            }
+            else if (httpGetResource(0) == "getdht") {
               jsonReply = "{ ";
               getDht();
               jsonReply += " ,\n"; 
@@ -1469,7 +1543,8 @@ void loop() {
               #endif
               client.write(outBuff);
               break;
-            } else if (httpGetResource(0) == "img") {
+            }
+            else if (httpGetResource(0) == "img") {
               client.write("HTTP/1.0 200 OK\r\nContent-type: image/png\r\n\r\n");
               // httpSendData(client, (const char *)background_jpg, sizeof(background_jpg));
               int len = 0;
@@ -1485,7 +1560,8 @@ void loop() {
                 httpSendData(client, (const char *)eitech_png, sizeof(eitech_png));
               } 
               break;
-            } else if (httpGetResource(0) == "update.js") {
+            }
+            else if (httpGetResource(0) == "update.js") {
               // HTTP/1.1 302 Moved Temporarily
               if (defSettings.isAp) {
                 client.write("HTTP/1.0 200 OK\r\nContent-type: aplication/javascript\r\n\r\n/* DUMMY */\r\n\r\n");                  
@@ -1494,7 +1570,8 @@ void loop() {
                 client.write(defSettings.fwVersion);
                 client.write(".js\r\n\r\n");
               }
-            } else if (httpGetResource(0) == "index.html" || httpGetResource(0) == "") {
+            }
+            else if (httpGetResource(0) == "index.html" || httpGetResource(0) == "") {
             // Serial.println(httpRequestURL);
             // client.write("HTTP/1.0 200 OK\nContent-type: text/plain\n\nHallo Welt!\n\n");
               client.write("HTTP/1.0 200 OK\r\nContent-type: text/html\r\n\r\n");
