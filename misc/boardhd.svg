@@ -15,7 +15,7 @@
    version="1.1"
    id="svg601"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
-   sodipodi:docname="board.svg">
+   sodipodi:docname="boardhd.svg">
   <defs
      id="defs595" />
   <sodipodi:namedview
@@ -25,10 +25,10 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.979899"
-     inkscape:cx="256.24031"
-     inkscape:cy="131.48385"
-     inkscape:document-units="mm"
+     inkscape:zoom="1.4"
+     inkscape:cx="253.68098"
+     inkscape:cy="151.6869"
+     inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      fit-margin-top="0"
@@ -37,7 +37,7 @@
      fit-margin-bottom="0"
      inkscape:window-width="1916"
      inkscape:window-height="1041"
-     inkscape:window-x="1920"
+     inkscape:window-x="0"
      inkscape:window-y="18"
      inkscape:window-maximized="0"
      units="px" />
